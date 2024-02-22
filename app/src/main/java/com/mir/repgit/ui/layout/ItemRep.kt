@@ -30,7 +30,7 @@ fun ItemRep(
     onClick: () -> Unit,
 ) {
     Box(modifier = modifier
-        .background(Color(0xFF10194E))
+        .background(Color(0xCC10194E))
         .clickable { onClick.invoke() }
         .drawBehind {
             drawArc(

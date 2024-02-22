@@ -158,7 +158,7 @@ fun SearchField(
 
     Surface(
         shape = animatedShape,
-        color = Color(0xFF10194E),
+        color = Color(0x9910194E),
         contentColor = contentColorFor(Color(0xFF10194E)),
         modifier = modifier
             .zIndex(1f)
@@ -278,7 +278,7 @@ fun SearchField(
                         )
                     }
                 )
-                IconButton(onClick = { /*TODO*/ }) {
+                IconButton(modifier = Modifier.fillMaxWidth(), onClick = { /*TODO*/ }) {
                     Image(
                         painter = painterResource(id = R.drawable.search),
                         contentDescription = "search"
