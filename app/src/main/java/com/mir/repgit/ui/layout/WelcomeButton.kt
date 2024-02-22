@@ -51,7 +51,7 @@ fun WelcomeButton(modifier: Modifier,
     }
 
     var close by remember (Unit){
-        mutableStateOf(false)
+        mutableStateOf(expanded)
     }
     AnimatedVisibility(
         visible =  !close,
