@@ -1,5 +1,7 @@
-val koinVersion= rootProject.extra["koin_version"] as String
+import org.gradle.kotlin.dsl.extra
 
+val koinVersion= rootProject.extra["koin_version"] as String
+val mokoVersion= rootProject.extra["moko_version"] as String
 
 plugins {
     id("com.android.application")
@@ -57,6 +59,13 @@ dependencies {
      */
         implementation ("io.insert-koin:koin-androidx-compose:$koinVersion")
 
+    /**
+     * Moko:mvvm implementation
+     */
+// compose multiplatform
+   implementation("dev.icerock.moko:mvvm-compose:$mokoVersion")
+   implementation("dev.icerock.moko:mvvm-flow-compose:$mokoVersion")
+   implementation("dev.icerock.moko:mvvm-livedata-compose:$mokoVersion")
 
 
 

@@ -4,9 +4,9 @@ buildscript {
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.22")
     }
     extra.apply {
-        set("compose_compiler_version", "1.5.9")
         set("ktor_version", "2.3.8")
         set("koin_version", "3.6.0-wasm-alpha2")
+        set("moko_version","0.16.1")
     }
     repositories {
         mavenLocal()
