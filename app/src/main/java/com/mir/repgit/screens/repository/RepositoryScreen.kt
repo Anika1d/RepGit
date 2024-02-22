@@ -35,13 +35,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mir.repgit.R
 import com.mir.repgit.ui.layout.BackgroundContainer
+import com.mir.repgit.values.LocalNavController
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RepositoryScreen() {
+fun RepositoryScreen(idRep: Long?) {
     val sheetState = rememberBottomSheetScaffoldState()
     val coroutineScope = rememberCoroutineScope()
+    val navController = LocalNavController.current!!
     BackgroundContainer(modifier = Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             Row(
@@ -59,7 +61,7 @@ fun RepositoryScreen() {
                 horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(modifier = Modifier, onClick = { /*TODO*/ }) {
+                IconButton(modifier = Modifier, onClick = { navController.navigateUp() }) {
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "",
@@ -129,5 +131,5 @@ fun RepositoryScreen() {
 @Preview(showBackground = true)
 @Composable
 fun PreviewRepositoryScreen() {
-    RepositoryScreen()
+    RepositoryScreen(1)
 }
