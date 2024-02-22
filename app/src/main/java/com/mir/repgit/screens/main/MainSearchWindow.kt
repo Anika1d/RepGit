@@ -17,9 +17,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,26 +30,25 @@ import com.mir.repgit.ui.layout.BackgroundContainer
 import com.mir.repgit.ui.layout.ItemRep
 import com.mir.repgit.ui.layout.SearchField
 import com.mir.repgit.ui.layout.WelcomeButton
+import com.mir.repgit.viewmodel.MainViewModel
+import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
 @Composable
 fun MainSearchWindow() {
+    val viewModel= koinInject<MainViewModel>()
 
-    var value by remember {
-        mutableStateOf("")
-    }
-    var active by remember {
-        mutableStateOf(false)
-    }
-    var expandedWelcome by remember {
-        mutableStateOf(false)
-    }
+    val value = viewModel.searchValue.observeAsState().value!!
+    val active = viewModel.activeSearch.observeAsState().value!!
+    val isFirstSetup =viewModel.firstSetupApp.observeAsState().value!!
+    val coroutineScope= rememberCoroutineScope()
     BackgroundContainer(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-            AnimatedVisibility(visible = expandedWelcome,
+            AnimatedVisibility(visible = !isFirstSetup,
                 enter = fadeIn() + slideInVertically (tween(800))  ) {
 
 
@@ -71,12 +72,17 @@ fun MainSearchWindow() {
 
                         value = value,
                         onValueChange = {
-                            value = it
-                        },
-                        onActiveChange = { active = it },
+                           coroutineScope.launch {  viewModel.changeSearchValue(it)
+                        }},
+                        onActiveChange = {   viewModel.changeActiveSearch(it) },
                         active = active,
                         onSearch = {},
                         content = {
+                            item {
+                                AnimatedVisibility(visible = viewModel.reloadSearch.observeAsState().value==true) {
+                                    CircularProgressIndicator()
+                                }
+                            }
                             items(5){
                                 ItemRep(
                                     modifier = Modifier
@@ -92,14 +98,12 @@ fun MainSearchWindow() {
                 }
             }
             Spacer(modifier = Modifier.size(100.dp))
-
             WelcomeButton(
                 modifier = Modifier
                     .fillMaxSize(0.5f),
-                expanded=expandedWelcome,
+                expanded=!isFirstSetup,
                 onClick={
-                    expandedWelcome = !expandedWelcome
-                }
+                    viewModel.closeWelcomeWindow(false)                }
 
             )
 

@@ -50,7 +50,7 @@ fun WelcomeButton(modifier: Modifier,
         )
     }
 
-    var close by remember {
+    var close by remember (Unit){
         mutableStateOf(false)
     }
     AnimatedVisibility(
@@ -87,7 +87,7 @@ fun WelcomeButton(modifier: Modifier,
                                 )
                         )
                         secondCircleRadius.animateTo(0.dp.value)
-                         close = expanded
+                        close = true
 //                        offset.animateTo(Offset.Zero )
 //                        isExpanded = false
 //                        close = isExpanded
