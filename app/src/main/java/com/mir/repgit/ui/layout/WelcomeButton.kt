@@ -3,6 +3,8 @@ package com.mir.repgit.ui.layout
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -28,8 +30,10 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
-fun WelcomeButton(modifier: Modifier) {
-    var isExpanded by remember { mutableStateOf(false) }
+fun WelcomeButton(modifier: Modifier,
+                  expanded:Boolean,
+                  onClick: () -> Unit,
+                  ) {
     val sizeManager = SizeManager(
         LocalConfiguration.current.screenHeightDp,
         LocalConfiguration.current.screenWidthDp
@@ -51,7 +55,7 @@ fun WelcomeButton(modifier: Modifier) {
     }
     AnimatedVisibility(
         visible =  !close,
-        exit = shrinkHorizontally()
+        exit = fadeOut() +shrinkHorizontally(tween(1000))
     ) {
         Box(
             modifier = modifier.offset {
@@ -62,10 +66,9 @@ fun WelcomeButton(modifier: Modifier) {
 
             IconButton(
                 onClick = {
-
-                    isExpanded = !isExpanded
+                    onClick.invoke()
                     coroutineScope.launch {
-                        secondCircleRadius.animateTo(150.dp.value)
+                        secondCircleRadius.animateTo(1200.dp.value)
                         offset.animateTo(
                             sizeManager.giveNeed(
                                 compactSize = Offset(
@@ -84,7 +87,7 @@ fun WelcomeButton(modifier: Modifier) {
                                 )
                         )
                         secondCircleRadius.animateTo(0.dp.value)
-                         close = isExpanded
+                         close = expanded
 //                        offset.animateTo(Offset.Zero )
 //                        isExpanded = false
 //                        close = isExpanded
@@ -120,10 +123,15 @@ fun WelcomeButton(modifier: Modifier) {
 @Preview(showBackground = true)
 @Composable
 fun PreviewWelcomeButton() {
+    var expandedWelcome by remember {
+        mutableStateOf(false)
+    }
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        WelcomeButton(modifier = Modifier.fillMaxSize(0.5f))
+        WelcomeButton(modifier = Modifier.fillMaxSize(0.5f),
+            expandedWelcome
+        ) { expandedWelcome = !expandedWelcome }
     }
 }
