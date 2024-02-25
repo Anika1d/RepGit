@@ -4,5 +4,5 @@ import com.mir.repgit.viewmodel.MainViewModel
 import org.koin.dsl.module
 
 val viewModelModel= module {
-    single { MainViewModel() }
+    single { MainViewModel(searchUseCase = get()) }
 }
