@@ -2,9 +2,10 @@ package com.mir.repgit.screens.main
 
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.mir.repgit.screens.navigation.Route
 import com.mir.repgit.tools.LoadState
 import com.mir.repgit.tools.NextPackRepositoryState
@@ -58,14 +60,21 @@ fun MainSearchScreen() {
     val repositories = viewModel.repositories.observeAsState().value
     val coroutineScope = rememberCoroutineScope()
     BackgroundContainer(modifier = Modifier.fillMaxSize()) {
+        Spacer(modifier = Modifier.size(100.dp))
+        WelcomeButton(modifier = Modifier
+            .fillMaxSize(0.5f)
+            .zIndex(1f).background(Color.Transparent),
+            expanded = !isFirstSetup,
+            onClick = { viewModel.closeWelcomeWindow(true) }
+        )
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().animateContentSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
             AnimatedVisibility(
-                visible = !isFirstSetup,
-                enter = fadeIn() + slideInVertically(tween(800))
+                visible = isFirstSetup,
+                enter = fadeIn(tween(300,500))
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -145,16 +154,8 @@ fun MainSearchScreen() {
                         })
                 }
             }
-            Spacer(modifier = Modifier.size(100.dp))
-            WelcomeButton(
-                modifier = Modifier.fillMaxSize(0.5f),
-                expanded = !isFirstSetup,
-                onClick = {
-                    viewModel.closeWelcomeWindow(false)
-                }
+        }
 
-            )
 
         }
     }
-}
