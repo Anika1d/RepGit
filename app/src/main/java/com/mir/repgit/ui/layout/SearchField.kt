@@ -1,6 +1,7 @@
 package com.mir.repgit.ui.layout
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -22,6 +23,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.onConsumedWindowInsetsChanged
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -106,7 +109,8 @@ fun SearchField(
 
         ),
     shape: Shape = RoundedCornerShape(22f),
-    content: LazyListScope.() -> Unit
+    searchState: LazyListState = rememberLazyListState(),
+    content: LazyListScope.() -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val animationProgress: State<Float> = animateFloatAsState(
@@ -219,7 +223,8 @@ fun SearchField(
                 BasicTextField(
                     value = value,
                     onValueChange = onValueChange,
-                    modifier = Modifier.fillMaxWidth(0.8f)
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
                         .height(SearchBarDefaults.InputFieldHeight)
                         .fillMaxWidth()
                         .drawBehind {
@@ -289,11 +294,16 @@ fun SearchField(
                 derivedStateOf(structuralEqualityPolicy()) { animationProgress.value > 0 }
             }
             if (showResults) {
-                LazyColumn(content = content,
+                LazyColumn(
+                    content = content,
                     modifier =
-                    Modifier .fillMaxSize()
+                    Modifier
+                        .fillMaxSize()
                         .graphicsLayer { alpha = animationProgress.value }
-                       )
+                        .animateContentSize(),
+                    state = searchState,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                )
             }
         }
     }
