@@ -62,14 +62,13 @@ dependencies {
     /**
      * Moko:mvvm implementation
      */
-// compose multiplatform
    implementation("dev.icerock.moko:mvvm-compose:$mokoVersion")
    implementation("dev.icerock.moko:mvvm-flow-compose:$mokoVersion")
    implementation("dev.icerock.moko:mvvm-livedata-compose:$mokoVersion")
 
 
 
-
+    implementation("io.coil-kt:coil-compose:2.5.0")
 
 
 
