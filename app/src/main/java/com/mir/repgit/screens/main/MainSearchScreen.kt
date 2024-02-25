@@ -1,5 +1,6 @@
 package com.mir.repgit.screens.main
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -32,6 +33,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.mir.repgit.screens.navigation.Route
 import com.mir.repgit.tools.LoadState
@@ -87,14 +89,18 @@ fun MainSearchScreen() {
                             )
                         }
                     }
-
+                    val context = LocalContext.current
                     val searchState = rememberLazyListState()
                     LaunchedEffect(searchState) {
                         snapshotFlow {
                             searchState.firstVisibleItemIndex
                         }.collectLatest { index ->
                             if (!viewModel.repositories.value.isNullOrEmpty()) if (index > viewModel.repositories.value!!.size - 15) {
-                                viewModel.nextPage()
+                                viewModel.nextPage(onSuccess = {}, onError = { message: String? ->
+                                    Toast.makeText(
+                                        context, message ?: "Unknown Error", Toast.LENGTH_LONG
+                                    ).show()
+                                })
                             }
                         }
                     }
@@ -109,7 +115,7 @@ fun MainSearchScreen() {
                         active = active,
                         onSearch = {
                             coroutineScope.launch {
-                                viewModel.search()
+                                viewModel.search(onError = {}, onSuccess = {})
                             }
                         },
                         searchState = searchState,

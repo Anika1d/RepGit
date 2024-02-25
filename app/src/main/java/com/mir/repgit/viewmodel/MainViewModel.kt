@@ -1,5 +1,6 @@
 package com.mir.repgit.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.mir.core.data.model.repository.PageRepository
@@ -10,6 +11,7 @@ import com.mir.core.usecase.SearchUseCase
 import com.mir.repgit.tools.LoadState
 import com.mir.repgit.tools.NextPackRepositoryState
 import dev.icerock.moko.mvvm.viewmodel.ViewModel
+import kotlinx.coroutines.delay
 
 class MainViewModel(
     private val searchUseCase: SearchUseCase
@@ -46,35 +48,29 @@ class MainViewModel(
         _firstSetupApp.value = b
     }
 
-    suspend fun nextPage() {
+    suspend fun nextPage(onSuccess: () -> Unit, onError: (String?) -> Unit) {
+        delay(300)
         if (_needAddResult.value == NextPackRepositoryState.POSSIBLE) {
             _needAddResult.value = NextPackRepositoryState.LOAD
             lastSearchPage.value?.nextPage?.let {
-                searchUseCase.search(SearchRequest.fromUrl(it)).collect { result ->
-                    when (result) {
-                        is ResultState.Success -> {
-                            val page = result.data
-                            val list = _repositories.value?.toMutableList() ?: mutableListOf()
-                            list.addAll(page?.items?.map { it } ?: listOf())
-                            _repositories.postValue(list)
-                            lastSearchPage.value = page
-                        }
-
-                        is ResultState.NetworkError -> {}
-                        is ResultState.Error -> {
-                        }
-                    }
-                }
+                search(searchR = SearchRequest.fromUrl(it),
+                    onSuccess = { onSuccess.toString() },
+                    onError = { mes -> onError.invoke(mes) })
             }
             _needAddResult.value =
                 if (lastSearchPage.value?.nextPage != null) NextPackRepositoryState.POSSIBLE else NextPackRepositoryState.IMPOSSIBLE
         }
     }
 
-    suspend fun search() {
-        if (!searchValue.value.isNullOrEmpty()) {
+    suspend fun search(
+        searchR: SearchRequest? = null, onSuccess: () -> Unit, onError: (String?) -> Unit
+    ) {
+        val sR: SearchRequest? = searchR
+            ?: if (searchValue.value.isNullOrEmpty()) null else SearchRequest(query = searchValue.value!!)
+        if (sR != null) {
             _reloadSearch.value = LoadState.SHOW
-            searchUseCase.search(SearchRequest(query = searchValue.value!!)).collect { result ->
+            Log.i("vmv", "request send")
+            searchUseCase.search(sR).collect { result ->
                 when (result) {
                     is ResultState.Success -> {
                         val list = _repositories.value?.toMutableList() ?: mutableListOf()
@@ -84,14 +80,20 @@ class MainViewModel(
                         lastSearchPage.value = page
                         _needAddResult.value =
                             if (page?.nextPage != null) NextPackRepositoryState.POSSIBLE else NextPackRepositoryState.IMPOSSIBLE
+                        onSuccess.invoke()
                     }
 
-                    is ResultState.NetworkError -> {}
+                    is ResultState.NetworkError -> {
+                        onError.invoke(result.error.message)
+                    }
                     is ResultState.Error -> {
+                        onError.invoke(result.error.message)
                     }
                 }
             }
             _reloadSearch.value = LoadState.HIDE
+            Log.i("vmv", "request end")
+
         }
     }
 
