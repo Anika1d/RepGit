@@ -18,11 +18,11 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import kotlin.coroutines.cancellation.CancellationException
 
 class ImplGithubRepository : IGithubRepository, KoinComponent {
     private val client: HttpClient by inject<HttpClient>()
     override suspend fun search(searchRequest: SearchRequest): Flow<ResultState<PageRepository>> {
-
         return flow {
             try {
                 val s = client.get("search/repositories") {
@@ -61,11 +61,15 @@ class ImplGithubRepository : IGithubRepository, KoinComponent {
                         )
                     )
 
-            } catch (e: Exception) {
+            }
+            catch (ce: CancellationException) {
+                Log.e("infos",ce.stackTrace.toString())
+                emit(ResultState.Error(ce, HttpStatusCode.TooManyRequests))
+                throw ce
+            }
+            catch (e: Exception) {
                 emit(ResultState.Error(e, HttpStatusCode.BadRequest))
             }
         }.flowOn(Dispatchers.IO)
-
-
     }
 }
