@@ -43,6 +43,7 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+
 }
 
 dependencies {
@@ -54,7 +55,10 @@ dependencies {
     implementation("io.ktor:ktor-client-cio")
     implementation("io.ktor:ktor-client-content-negotiation")
     implementation("io.ktor:ktor-serialization-kotlinx-json")
+    implementation ("io.ktor:ktor-client-android")
+
     implementation("io.ktor:ktor-client-logging-jvm")
+    implementation("ch.qos.logback:logback-classic:1.3.14")
 
     /**
      * Koin implementation
