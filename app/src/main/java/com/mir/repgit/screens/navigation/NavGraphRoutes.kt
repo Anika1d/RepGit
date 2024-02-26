@@ -15,11 +15,17 @@ object NavGraphRoutes {
     }
     fun NavGraphBuilder.repositoryScreen(){
         composable(
-            Route.REPOSITORY_SCREEN.path+"{id_rep}",
-            arguments = listOf(navArgument("id_rep"){type= NavType.LongType})
+            Route.REPOSITORY_SCREEN.path + "{owner}/{repo}",
+            arguments = listOf(
+                navArgument("owner") { type = NavType.StringType },
+                navArgument("repo") { type = NavType.StringType }
+            )
         ){
                 bundle->
-            RepositoryScreen(idRep=bundle.arguments?.getLong("id_rep"))
+            RepositoryScreen(
+                owner = bundle.arguments?.getString("owner")!!,
+                repo = bundle.arguments?.getString("repo")!!
+            )
         }
     }
 }
