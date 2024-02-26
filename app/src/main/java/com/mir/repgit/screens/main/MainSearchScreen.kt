@@ -1,5 +1,6 @@
 package com.mir.repgit.screens.main
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -26,6 +27,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
@@ -35,8 +37,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.core.os.bundleOf
+import com.mir.repgit.R
 import com.mir.repgit.screens.navigation.Route
 import com.mir.repgit.tools.LoadState
 import com.mir.repgit.tools.NextPackRepositoryState
@@ -63,39 +71,60 @@ fun MainSearchScreen() {
         Spacer(modifier = Modifier.size(100.dp))
         WelcomeButton(modifier = Modifier
             .fillMaxSize(0.5f)
-            .zIndex(1f).background(Color.Transparent),
+            .zIndex(1f)
+            .background(Color.Transparent),
             expanded = !isFirstSetup,
             onClick = { viewModel.closeWelcomeWindow(true) }
         )
         Column(
-            modifier = Modifier.fillMaxSize().animateContentSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .animateContentSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
             AnimatedVisibility(
                 visible = isFirstSetup,
-                enter = fadeIn(tween(300,500))
+                enter = fadeIn(tween(300, 500))
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.Top
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .padding(8.dp),
-                        contentAlignment = Alignment.TopCenter
-                    ) {
-                        IconButton(onClick = { viewModel.changeActiveSearch(false) }) {
-                            Icon(
-                                modifier = Modifier
-                                    .matchParentSize()
-                                    .defaultMinSize(114.dp, 114.dp),
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "",
-                                tint = Color(0xFFFAFAFA)
+                    this@Row.AnimatedVisibility(visible = !active) {
+                        Box(
+                            modifier = Modifier
+                                .height(60.dp)
+                                .padding(8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = stringResource(id = R.string.app_name),
+                                color = Color.White,
+                                textAlign = TextAlign.Center,
+                                style = TextStyle(fontSize = 25.sp)
                             )
+
+                        }
+                    }
+                    this@Row.AnimatedVisibility(visible = active) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .padding(8.dp),
+                            contentAlignment = Alignment.TopCenter
+                        ) {
+                            IconButton(onClick = { viewModel.changeActiveSearch(false) }) {
+                                Icon(
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .defaultMinSize(114.dp, 114.dp),
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "",
+                                    tint = Color(0xFFFAFAFA)
+                                )
+                            }
                         }
                     }
                     val context = LocalContext.current
@@ -143,7 +172,7 @@ fun MainSearchScreen() {
                                     contentPadding = PaddingValues(8.dp),
                                     repository = repositories!![it]
                                 ) {
-                                    navController.navigate(Route.REPOSITORY_SCREEN.path + "2")
+                                    navController.navigate(Route.REPOSITORY_SCREEN.path + "${repositories[it].owner.name}/${repositories[it].name}")
                                 }
                             }
                             item {
@@ -157,5 +186,5 @@ fun MainSearchScreen() {
         }
 
 
-        }
     }
+}
