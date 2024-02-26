@@ -59,7 +59,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.toRect
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -84,6 +83,9 @@ import androidx.compose.ui.unit.offset
 import androidx.compose.ui.util.lerp
 import androidx.compose.ui.zIndex
 import com.mir.repgit.R
+import com.mir.repgit.ui.theme.darkBlue
+import com.mir.repgit.ui.theme.dirtyWhite
+import com.mir.repgit.ui.theme.mint
 import kotlinx.coroutines.delay
 import kotlin.math.max
 import kotlin.math.min
@@ -98,14 +100,14 @@ fun SearchField(
     active: Boolean,
     onActiveChange: (Boolean) -> Unit,
     colors: TextFieldColors = TextFieldDefaults.colors(
-        unfocusedContainerColor = Color(0xFF10194E),
-        focusedContainerColor = Color(0xFF10194E),
-        unfocusedPlaceholderColor = Color(0xFF1DC7AC),
-        focusedPlaceholderColor = Color(0xFF1DC7AC),
-        focusedTextColor = Color(0xFFFAFAFA),
-        unfocusedTextColor = Color(0xFFFAFAFA),
-        cursorColor = Color(0xFFFAFAFA),
-        disabledTextColor = Color(0xFFFAFAFA),
+        unfocusedContainerColor = darkBlue,
+        focusedContainerColor = darkBlue,
+        unfocusedPlaceholderColor = mint,
+        focusedPlaceholderColor = mint,
+        focusedTextColor = dirtyWhite,
+        unfocusedTextColor = dirtyWhite,
+        cursorColor = dirtyWhite,
+        disabledTextColor = dirtyWhite,
 
         ),
     shape: Shape = RoundedCornerShape(22f),
@@ -162,8 +164,8 @@ fun SearchField(
 
     Surface(
         shape = animatedShape,
-        color = Color(0x9910194E),
-        contentColor = contentColorFor(Color(0xFF10194E)),
+        color = darkBlue.copy(alpha = 0.6f),
+        contentColor = contentColorFor(darkBlue),
         modifier = modifier
             .zIndex(1f)
             .onConsumedWindowInsetsChanged { consumedInsets ->
@@ -197,7 +199,7 @@ fun SearchField(
             }
             .border(
                 width = 2.dp,
-                color = Color(0xFF1DC7AC),
+                color = mint,
                 shape = shape
             )
             .clip(shape)
@@ -215,7 +217,7 @@ fun SearchField(
                 drawLine(
                     start = Offset(0f, size.height),
                     end = Offset(size.width, size.height),
-                    color = Color(0xFF1DC7AC),
+                    color = mint,
                     alpha = 1f,
                     strokeWidth = 2.dp.toPx()
                 )
@@ -233,7 +235,7 @@ fun SearchField(
                                 useCenter = false,
                                 startAngle = 80f,
                                 sweepAngle = -160f,
-                                color = Color(0xFF1DC7AC),
+                                color = mint,
                                 size = Size(center.x / 2, size.height),
                                 style = Stroke(width = 2.dp.toPx()),
                             )
@@ -268,13 +270,13 @@ fun SearchField(
                             interactionSource = interactionSource,
                             shape = SearchBarDefaults.inputFieldShape,
                             colors = TextFieldDefaults.colors(
-                                unfocusedContainerColor = Color(0xFF10194E),
-                                focusedContainerColor = Color(0xFF10194E),
-                                unfocusedPlaceholderColor = Color(0xFF1DC7AC),
-                                focusedPlaceholderColor = Color(0xFF1DC7AC),
-                                focusedTextColor = Color(0xFFFAFAFA),
-                                unfocusedTextColor = Color(0xFFFAFAFA),
-                                cursorColor = Color(0xFFFAFAFA),
+                                unfocusedContainerColor = darkBlue,
+                                focusedContainerColor = darkBlue,
+                                unfocusedPlaceholderColor = mint,
+                                focusedPlaceholderColor = mint,
+                                focusedTextColor = dirtyWhite,
+                                unfocusedTextColor = dirtyWhite,
+                                cursorColor = dirtyWhite,
 
                                 ),
 
@@ -283,7 +285,10 @@ fun SearchField(
                         )
                     }
                 )
-                IconButton(modifier = Modifier.fillMaxWidth(), onClick = { /*TODO*/ }) {
+                IconButton(modifier = Modifier.fillMaxWidth(), onClick = {
+                    if (!active) onActiveChange(true)
+                    onSearch(value)
+                }) {
                     Image(
                         painter = painterResource(id = R.drawable.search),
                         contentDescription = "search"
