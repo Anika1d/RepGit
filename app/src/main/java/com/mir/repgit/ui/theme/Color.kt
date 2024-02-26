@@ -13,6 +13,7 @@ val Pink40 = Color(0xFF7D5260)
 val darkBlue = Color(0xFF010A43)
 val mint = Color(0xFF1DC7AC)
 val blue=Color(0xFF10194E)
+val dirtyWhite = Color(0xFFFAFAFA)
 
 val defaultColors = listOf(
     darkBlue,
