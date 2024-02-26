@@ -1,5 +1,6 @@
 package com.mir.repgit.ui.layout
 
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -18,7 +19,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -30,6 +30,9 @@ import com.mir.core.data.model.repository.Owner
 import com.mir.core.data.model.repository.RepositoryItem
 import com.mir.repgit.R
 import com.mir.repgit.tools.SizeManager
+import com.mir.repgit.ui.theme.blue
+import com.mir.repgit.ui.theme.dirtyWhite
+import com.mir.repgit.ui.theme.lineBackgroundColor
 
 @Composable
 fun ItemRep(
@@ -39,11 +42,11 @@ fun ItemRep(
     onClick: () -> Unit,
 ) {
     Box(modifier = modifier
-        .background(Color(0xCC10194E))
+        .background(blue.copy(alpha = 0.8f))
         .clickable { onClick.invoke() }
         .drawBehind {
             drawArc(
-                color = Color(0xFFC4C4C4), alpha = 0.1f,
+                color = lineBackgroundColor, alpha = 0.1f,
                 style = Stroke(width = 1f),
                 useCenter = false,
                 startAngle = 100f,
@@ -52,7 +55,7 @@ fun ItemRep(
                 size = Size(size.width, center.y / 2f)
             )
             drawArc(
-                color = Color(0xFFC4C4C4), alpha = 0.1f,
+                color = lineBackgroundColor, alpha = 0.1f,
                 style = Stroke(width = 1f),
                 useCenter = false,
                 startAngle = 100f,
@@ -66,6 +69,7 @@ fun ItemRep(
                 model = repository.owner.avatarUrl.ifEmpty { painterResource(id = R.drawable.avatar_default) },
                 contentDescription = repository.owner.avatarUrl.ifEmpty { "avatar_owner" },
                 placeholder = painterResource(id = R.drawable.avatar_default),
+                error = painterResource(id = R.drawable.image_fail),
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(
@@ -78,8 +82,8 @@ fun ItemRep(
             )
 
             Column {
-                Text(text = repository.name, color = Color.White)
-                Text(text = repository.description ?: "", color = Color.White)
+                Text(text = repository.name, color = dirtyWhite)
+                Text(text = repository.description ?: "", color = dirtyWhite)
             }
 
         }
@@ -96,9 +100,13 @@ fun PreviewItemRep() {
             .height(120.dp),
         contentPadding = PaddingValues(8.dp),
         repository = RepositoryItem(
-            owner = Owner(""),
+            owner = Owner("", ""),
             description = "Desc",
-            name = "Repka"
+            name = "Repka",
+            issuesCount = "1",
+            starCount = "1",
+            forkCount = "2",
+            watchersCount = "1"
         ),
     ) {
 
