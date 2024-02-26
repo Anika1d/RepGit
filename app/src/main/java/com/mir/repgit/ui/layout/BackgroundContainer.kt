@@ -13,6 +13,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.tooling.preview.Preview
+import com.mir.repgit.ui.theme.lineBackgroundColor
 
 @Composable
 fun BackgroundContainer(
@@ -28,28 +29,28 @@ fun BackgroundContainer(
             )
             .drawBehind {
                 drawCircle(
-                    color = Color(0xFFC4C4C4),
+                    color = lineBackgroundColor,
                     radius = size.width - center.x,
                     style = Stroke(3f),
                     center = Offset(center.x, center.y - center.y / 4),
                     alpha = 0.1f
                 )
                 drawCircle(
-                    color = Color(0xFFC4C4C4),
+                    color = lineBackgroundColor,
                     radius = size.width - center.x - center.x / 4f,
                     style = Stroke(width = 2f),
                     center = Offset(center.x, center.y - center.y / 3),
                     alpha = 0.1f
                 )
                 drawCircle(
-                    color = Color(0xFFC4C4C4),
+                    color = lineBackgroundColor,
                     radius = size.width / 5f,
                     style = Stroke(width = 1f),
                     center = Offset(center.x, center.y + center.y / 2f),
                     alpha = 0.1f
                 )
                 drawArc(
-                    color = Color(0xFFC4C4C4), alpha = 0.1f,
+                    color = lineBackgroundColor, alpha = 0.1f,
                     style = Stroke(width = 1f),
                     useCenter = false,
                     startAngle = 100f,
@@ -58,7 +59,7 @@ fun BackgroundContainer(
                     size = Size(center.x / 4f, center.y / 2f)
                 )
                 drawArc(
-                    color = Color(0xFFC4C4C4), alpha = 0.1f,
+                    color = lineBackgroundColor, alpha = 0.1f,
                     style = Stroke(width = 1f),
                     useCenter = false,
                     startAngle = 220f,
