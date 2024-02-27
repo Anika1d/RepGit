@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -12,14 +13,32 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.mir.repgit.R
 import com.mir.repgit.ui.theme.lineBackgroundColor
+import com.mir.repgit.ui.theme.mint
 
 @Composable
 fun BackgroundContainer(
     modifier: Modifier,
     contentAlignment: Alignment = Alignment.Center,
     propagateMinConstraints: Boolean = false,
+    checkEthernetView: @Composable () -> Unit = {
+        ConnectionLayout(onAvailable = { },
+            onUnavailable = {
+                Box(modifier = Modifier
+                    .fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                    content = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.no_ethernet),
+                            contentDescription = "no_ethernet",
+                            tint = mint
+                        )
+                    })
+            })
+    },
     content: @Composable BoxScope.() -> Unit,
 ) {
     Box(
@@ -70,7 +89,10 @@ fun BackgroundContainer(
             },
         contentAlignment = contentAlignment,
         propagateMinConstraints = propagateMinConstraints,
-        content = content,
+        content = {
+            checkEthernetView.invoke()
+            content.invoke(this)
+        },
     )
 
 }
