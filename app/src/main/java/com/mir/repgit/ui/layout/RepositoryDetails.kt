@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mir.repgit.tools.composable.placeholder
+import com.mir.repgit.tools.composable.placeholder.placeholder
 import com.mir.repgit.ui.theme.mint
 
 @Composable

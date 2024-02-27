@@ -14,6 +14,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -41,6 +44,14 @@ fun ItemRep(
     repository: RepositoryItem,
     onClick: () -> Unit,
 ) {
+    val configuration=LocalConfiguration.current
+    val sizeManager by remember {
+        mutableStateOf(
+            SizeManager(
+                configuration.screenHeightDp,
+                configuration.screenWidthDp
+            ))
+    }
     Box(modifier = modifier
         .background(blue.copy(alpha = 0.8f))
         .clickable { onClick.invoke() }
@@ -73,10 +84,7 @@ fun ItemRep(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(
-                        SizeManager(
-                            LocalConfiguration.current.screenHeightDp,
-                            LocalConfiguration.current.screenWidthDp
-                        ).giveNeed(40.dp, 60.dp, 80.dp)
+                        sizeManager.giveNeed(40.dp, 60.dp, 80.dp)
                     )
                     .clip(CircleShape)
             )
