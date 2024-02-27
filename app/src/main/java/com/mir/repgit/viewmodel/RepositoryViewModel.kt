@@ -1,8 +1,8 @@
 package com.mir.repgit.viewmodel
 
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import dev.icerock.moko.mvvm.livedata.LiveData
+import dev.icerock.moko.mvvm.livedata.MutableLiveData
 import com.mir.core.data.model.issues.Issues
 import com.mir.core.data.model.repository.RepositoryItem
 import com.mir.core.data.request.IssuesRequest
@@ -47,7 +47,7 @@ class RepositoryViewModel(
         ).collect { result ->
             when (result) {
                 is ResultState.Success -> {
-                    _repository.postValue(result.data)
+                    _repository.value=result.data
                     onSuccess.invoke()
                 }
 
@@ -79,7 +79,7 @@ class RepositoryViewModel(
             ).collect { result ->
                 when (result) {
                     is ResultState.Success -> {
-                        _issues.postValue(result.data)
+                        _issues.value=result.data
                         Log.i("issuie", "success")
                         onSuccess.invoke()
                     }
@@ -101,9 +101,9 @@ class RepositoryViewModel(
     }
 
     fun clearData() {
-        _repository.postValue(null)
-        _dataRepositoryReceived.postValue(false)
-        _dataIssuesReceived.postValue(false)
+        _repository.value=null
+        _dataRepositoryReceived.value=false
+        _dataIssuesReceived.value=false
 
     }
 }

@@ -1,8 +1,6 @@
 package com.mir.repgit.viewmodel
 
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import com.mir.core.data.model.repository.PageRepository
 import com.mir.core.data.model.repository.RepositoryItem
 import com.mir.core.data.request.SearchRequest
@@ -10,6 +8,9 @@ import com.mir.core.data.response.ResultState
 import com.mir.core.usecase.SearchUseCase
 import com.mir.repgit.tools.LoadState
 import com.mir.repgit.tools.NextPackRepositoryState
+import dev.icerock.moko.mvvm.livedata.LiveData
+import dev.icerock.moko.mvvm.livedata.MutableLiveData
+import dev.icerock.moko.mvvm.livedata.map
 import dev.icerock.moko.mvvm.viewmodel.ViewModel
 import kotlinx.coroutines.launch
 
@@ -22,7 +23,8 @@ class MainViewModel(
         get() = _repositories
 
     private val lastSearchPage: MutableLiveData<PageRepository?> = MutableLiveData(null)
-
+    val countResult: LiveData<Int>
+        get() = lastSearchPage.map { it?.totalCount ?: 0 }
 
     private val _needAddResult: MutableLiveData<NextPackRepositoryState> =
         MutableLiveData(NextPackRepositoryState.IMPOSSIBLE)
@@ -56,7 +58,7 @@ class MainViewModel(
                     search(searchR = SearchRequest.fromUrl(it),
                         onSuccess = { onSuccess.toString() },
                         onError = { mes ->
-                            _needAddResult.postValue(NextPackRepositoryState.POSSIBLE)
+                            _needAddResult.value = (NextPackRepositoryState.POSSIBLE)
                             onError.invoke(mes)
                         })
                 }
@@ -70,28 +72,30 @@ class MainViewModel(
     ) {
         viewModelScope.launch {
             val sR: SearchRequest? = searchR
-                ?: if (searchValue.value.isNullOrEmpty()) null else SearchRequest(query = searchValue.value!!)
+                ?: if (searchValue.value.isEmpty()) null else SearchRequest(query = searchValue.value)
             if (sR != null) {
                 _reloadSearch.value = LoadState.SHOW
                 Log.i("vmv", "request send")
                 searchUseCase.search(sR).collect { result ->
                     when (result) {
                         is ResultState.Success -> {
-                            val list = _repositories.value?.toMutableList() ?: mutableListOf()
+                            val list = _repositories.value.toMutableList()
                             val page = result.data
                             list.addAll(page?.items?.map { it } ?: listOf())
-                            _repositories.postValue(list)
+                            _repositories.value = list
                             lastSearchPage.value = page
                             _needAddResult.value =
                                 if (page?.nextPage != null) NextPackRepositoryState.POSSIBLE else NextPackRepositoryState.IMPOSSIBLE
                             onSuccess.invoke()
                         }
+
                         is ResultState.NetworkError -> {
                             onError.invoke(result.error.message)
                         }
+
                         is ResultState.Error -> {
-                            if (result.statusCode2Int==400)
-                                onError.invoke("Что-то пошло не так, попробуйте позже")
+                            if (result.statusCode2Int == 400)
+                                onError.invoke("Something went wrong, try again later")
                             else
                                 onError.invoke(result.error.message)
                         }
@@ -110,6 +114,7 @@ class MainViewModel(
     fun changeSearchValue(s: String) {
         _searchValue.value = s
         _repositories.value = listOf()
+        lastSearchPage.value = null
     }
 
 }
