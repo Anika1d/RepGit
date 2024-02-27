@@ -10,10 +10,6 @@ class SizeManager(
     val screenSize: Size
 ) {
     constructor(h:Int,w:Int) : this(Size( w,h))
-
-    init {
-        Log.println(Log.INFO,"ScreenSize","${calculateScreenSize()}")
-    }
     val center:Offset= Offset(x=screenSize.width.toFloat()/2f,y=screenSize.height.toFloat()/2f)
 
     fun calculateScreenSize() = StandardSizeScreen.getSize(screenSize)
