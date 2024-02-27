@@ -6,7 +6,6 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,6 +49,7 @@ import com.mir.repgit.tools.composable.network.rememberConnectivityState
 import com.mir.repgit.ui.layout.BackgroundContainer
 import com.mir.repgit.ui.layout.ItemRep
 import com.mir.repgit.ui.layout.SearchField
+import com.mir.repgit.ui.layout.SearchQueryLayout
 import com.mir.repgit.ui.layout.WelcomeButton
 import com.mir.repgit.ui.theme.dirtyWhite
 import com.mir.repgit.ui.theme.mint
@@ -69,6 +69,8 @@ fun MainSearchScreen() {
     val active = viewModel.activeSearch.observeAsState().value
     val isFirstSetup = viewModel.firstSetupApp.observeAsState().value
     val repositories = viewModel.repositories.observeAsState().value
+    val searchQueries = viewModel.searchQueries.observeAsState().value
+
     val connectEthernet by rememberConnectivityState()
     val context = LocalContext.current
     val searchState = rememberLazyListState()
@@ -154,9 +156,12 @@ fun MainSearchScreen() {
                         onValueChange = {
                             viewModel.changeSearchValue(it)
                         },
-                        onActiveChange = { viewModel.changeActiveSearch(it) },
+                        onActiveChange = {
+                            viewModel.clearSearchQueries()
+                            viewModel.changeActiveSearch(it) },
                         active = active,
                         onSearch = {
+                            viewModel.clearSearchQueries()
                             if (connectEthernet == ConnectivityState.Available) {
                                 viewModel.search(onError = {
                                     Toast.makeText(
@@ -191,12 +196,26 @@ fun MainSearchScreen() {
                                     }
                                 }
                             }
+                            items(searchQueries.size) {
+                                SearchQueryLayout(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(30.dp),
+                                    item =
+                                    searchQueries[it],
+                                    onDelete = {
+                                        viewModel.deleteSearchValue( searchQueries[it])
+                                    },
+                                    onClick = {
+                                        viewModel.changeSearchValue(searchQueries[it].name)
+                                    },
+                                )
+                            }
                             items(repositories.size) {
                                 ItemRep(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(120.dp)
-                                        .clickable {},
+                                        .height(120.dp),
                                     contentPadding = PaddingValues(8.dp),
                                     repository = repositories[it]
                                 ) {
