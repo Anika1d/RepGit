@@ -6,6 +6,11 @@ import com.mir.core.data.model.repository.RepositoryItem
 import com.mir.core.data.request.SearchRequest
 import com.mir.core.data.response.ResultState
 import com.mir.core.usecase.SearchUseCase
+import com.mir.database.data.model.SearchQuery
+import com.mir.database.data.request.SearchQueryRequest
+import com.mir.database.usecase.DeleteSearchQueryUseCase
+import com.mir.database.usecase.GetSearchQueryUseCase
+import com.mir.database.usecase.InsertSearchQueryUseCase
 import com.mir.repgit.tools.LoadState
 import com.mir.repgit.tools.NextPackRepositoryState
 import dev.icerock.moko.mvvm.livedata.LiveData
@@ -15,8 +20,15 @@ import dev.icerock.moko.mvvm.viewmodel.ViewModel
 import kotlinx.coroutines.launch
 
 class MainViewModel(
-    private val searchUseCase: SearchUseCase
+    private val searchUseCase: SearchUseCase,
+    private val deleteSearchQueryUseCase: DeleteSearchQueryUseCase,
+    private val insertSearchQueryUseCase: InsertSearchQueryUseCase,
+    private val getSearchQueryUseCase: GetSearchQueryUseCase,
 ) : ViewModel() {
+
+    private val _searchQueries: MutableLiveData<List<SearchQuery>> = MutableLiveData(emptyList())
+    val searchQueries: LiveData<List<SearchQuery>>
+        get() = _searchQueries
 
     private val _repositories: MutableLiveData<List<RepositoryItem>> = MutableLiveData(emptyList())
     val repositories: LiveData<List<RepositoryItem>>
@@ -67,9 +79,32 @@ class MainViewModel(
         }
     }
 
+    fun getSearchValue(s: String) {
+        viewModelScope.launch {
+            getSearchQueryUseCase.invoke(SearchQueryRequest(name = s, limit = 5)).collect {
+                _searchQueries.value = it
+            }
+        }
+    }
+
+    fun deleteSearchValue(searchQuery: SearchQuery) {
+        viewModelScope.launch {
+            deleteSearchQueryUseCase.deleteSearchQuery(SearchQueryRequest(searchQuery.name))
+            getSearchValue(_searchValue.value)
+        }
+    }
+
+    private fun insertSearchValue() {
+        viewModelScope.launch {
+            insertSearchQueryUseCase.insertSearchQuery(SearchQueryRequest(searchValue.value))
+        }
+    }
+
+
     fun search(
         searchR: SearchRequest? = null, onSuccess: () -> Unit, onError: (String?) -> Unit
     ) {
+        insertSearchValue()
         viewModelScope.launch {
             val sR: SearchRequest? = searchR
                 ?: if (searchValue.value.isEmpty()) null else SearchRequest(query = searchValue.value)
@@ -112,9 +147,17 @@ class MainViewModel(
     }
 
     fun changeSearchValue(s: String) {
-        _searchValue.value = s
-        _repositories.value = listOf()
-        lastSearchPage.value = null
+        viewModelScope.launch {
+            _searchValue.value = s
+            _repositories.value = listOf()
+            lastSearchPage.value = null
+            getSearchValue(_searchValue.value)
+
+        }
+    }
+
+    fun clearSearchQueries() {
+        _searchQueries.value = listOf()
     }
 
 }
