@@ -1,4 +1,4 @@
-package com.mir.repgit.tools.composable
+package com.mir.repgit.tools.composable.placeholder
 
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
