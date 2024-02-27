@@ -26,8 +26,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import kotlin.coroutines.cancellation.CancellationException
 
-class ImplGithubRepository : IGithubRepository, KoinComponent {
-    private val client: HttpClient by inject<HttpClient>()
+class ImplGithubRepository (private val client: HttpClient) : IGithubRepository, KoinComponent {
     override suspend fun search(searchRequest: SearchRequest): Flow<ResultState<PageRepository>> {
         return flow {
             try {

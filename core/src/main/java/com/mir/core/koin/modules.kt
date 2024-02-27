@@ -7,13 +7,14 @@ import com.mir.core.usecase.RepositoryUseCase
 import com.mir.core.usecase.SearchUseCase
 import org.koin.dsl.module
 
-val coreModule= module{
+val coreModule = module {
     single { KtorClient.provide() }
-    single{ImplGithubRepository()}
+    single { ImplGithubRepository(client = get()) }
 }
 
-val useCasesModule= module {
-    factory { SearchUseCase() }
-    factory { IssuesUseCase() }
-    factory { RepositoryUseCase() }
+val useCasesCoreModule = module {
+    includes(coreModule)
+    factory { SearchUseCase(repository = get()) }
+    factory { IssuesUseCase(repository = get()) }
+    factory { RepositoryUseCase(repository = get()) }
 }

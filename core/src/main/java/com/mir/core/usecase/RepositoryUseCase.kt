@@ -6,10 +6,8 @@ import com.mir.core.data.response.ResultState
 import com.mir.core.repository.ImplGithubRepository
 import kotlinx.coroutines.flow.Flow
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
-class RepositoryUseCase : KoinComponent {
-    private val repository by inject<ImplGithubRepository>()
+class RepositoryUseCase(private val repository: ImplGithubRepository) : KoinComponent {
 
     suspend fun getRepository(repositoryRequest: RepositoryRequest): Flow<ResultState<RepositoryItem>> {
         return repository.getRepository(repositoryRequest)

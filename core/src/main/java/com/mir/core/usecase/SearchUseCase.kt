@@ -6,16 +6,14 @@ import com.mir.core.data.response.ResultState
 import com.mir.core.repository.ImplGithubRepository
 import kotlinx.coroutines.flow.Flow
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
-class SearchUseCase: KoinComponent {
-    private val repository by inject<ImplGithubRepository>()
-
+class SearchUseCase(private val repository: ImplGithubRepository) : KoinComponent {
     suspend fun search(searchRequest: SearchRequest): Flow<ResultState<PageRepository>> {
-       return repository.search(searchRequest)
+        return repository.search(searchRequest)
 
     }
+
     suspend operator fun invoke(searchRequest: SearchRequest): Flow<ResultState<PageRepository>> {
-       return search(searchRequest)
+        return search(searchRequest)
     }
 }
