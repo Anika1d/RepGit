@@ -1,5 +1,6 @@
 package com.mir.repgit.screens.repository
 
+import android.widget.Toast
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.foundation.layout.Arrangement
@@ -29,8 +30,8 @@ import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -43,6 +44,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -50,10 +52,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import coil.compose.AsyncImage
 import com.mir.repgit.R
 import com.mir.repgit.tools.SizeManager
-import com.mir.repgit.tools.composable.placeholder
+import com.mir.repgit.tools.composable.network.ConnectivityState
+import com.mir.repgit.tools.composable.network.rememberConnectivityState
+import com.mir.repgit.tools.composable.placeholder.placeholder
 import com.mir.repgit.ui.layout.BackgroundContainer
 import com.mir.repgit.ui.layout.ItemIssue
 import com.mir.repgit.ui.layout.RepositoryDetails
@@ -62,9 +67,11 @@ import com.mir.repgit.ui.theme.dirtyWhite
 import com.mir.repgit.ui.theme.mint
 import com.mir.repgit.values.LocalNavController
 import com.mir.repgit.viewmodel.RepositoryViewModel
+import dev.icerock.moko.mvvm.livedata.compose.observeAsState
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.compose.koinInject
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalCoroutinesApi::class)
 @Composable
 fun RepositoryScreen(owner: String, repo: String) {
     val sheetState = rememberBottomSheetScaffoldState()
@@ -72,27 +79,50 @@ fun RepositoryScreen(owner: String, repo: String) {
     val navController = LocalNavController.current!!
     val repository = viewModel.repository.observeAsState().value
     val issues = viewModel.issues.observeAsState().value
-    val repLog = viewModel.dataRepositoryReceived.observeAsState().value!!
+    val repLog = viewModel.dataRepositoryReceived.observeAsState().value
+    val context = LocalContext.current
+    val configuration = LocalConfiguration.current
+    val sizeManager by remember {
+        mutableStateOf(
+            SizeManager(
+                configuration.screenHeightDp,
+                configuration.screenWidthDp
+            )
+        )
+    }
+    val connectEthernet by rememberConnectivityState()
     var initialApiCalled by rememberSaveable { mutableStateOf(false) }
-    if (!initialApiCalled) {
-    LaunchedEffect(Unit) {
-            viewModel.clearData()
-            viewModel.getRepository(nameOwner = owner, nameRep = repo, onSuccess = {}, onError = {})
-            viewModel.getIssues(nameOwner = owner, nameRep = repo, onSuccess = {}, onError = {})
-            initialApiCalled=true
-    }
-    }
-
     val pullToRefreshState = rememberPullToRefreshState()
 
     val scaleFraction =
         if (pullToRefreshState.isRefreshing) 1f else LinearOutSlowInEasing.transform(
             pullToRefreshState.progress
         ).coerceIn(0f, 1f)
-    if (pullToRefreshState.isRefreshing) LaunchedEffect(key1 = true) {
-        viewModel.getRepository(nameOwner = owner, nameRep = repo, onSuccess = {}, onError = {})
-        viewModel.getIssues(nameOwner = owner, nameRep = repo, onSuccess = {}, onError = {})
-        pullToRefreshState.endRefresh()
+
+
+    if (!initialApiCalled || pullToRefreshState.isRefreshing) {
+        LaunchedEffect(true) {
+            if (connectEthernet == ConnectivityState.Available) {
+                if (!pullToRefreshState.isRefreshing) viewModel.clearData()
+                viewModel.getRepository(
+                    nameOwner = owner,
+                    nameRep = repo,
+                    onSuccess = {},
+                    onError = {})
+                viewModel.getIssues(
+                    nameOwner = owner,
+                    nameRep = repo,
+                    onSuccess = { if (pullToRefreshState.isRefreshing) pullToRefreshState.endRefresh() },
+                    onError = { if (pullToRefreshState.isRefreshing) pullToRefreshState.endRefresh() })
+                initialApiCalled = true
+            } else {
+                Toast.makeText(
+                    context, "Check your internet connection", Toast.LENGTH_LONG
+                ).show()
+                initialApiCalled = true
+                if (pullToRefreshState.isRefreshing) pullToRefreshState.endRefresh()
+            }
+        }
     }
     BackgroundContainer(
         modifier = Modifier
@@ -107,6 +137,7 @@ fun RepositoryScreen(owner: String, repo: String) {
             state = pullToRefreshState,
             indicator = { pullRefreshState ->
                 PullToRefreshDefaults.Indicator(
+                    modifier = Modifier.zIndex(1f),
                     state = pullRefreshState, color = mint
                 )
             })
@@ -153,8 +184,10 @@ fun RepositoryScreen(owner: String, repo: String) {
                         content = {
                             item {
                                 Text(
-                                    text = "Issues", style = TextStyle(
-                                        fontSize = 50.sp
+                                    modifier = Modifier.animateContentSize(),
+                                    text = "Issues " + if (repository?.issuesCount != "0") "" else "not found",
+                                    style = TextStyle(
+                                        fontSize = 35.sp
                                     )
                                 )
                             }
@@ -193,14 +226,11 @@ fun RepositoryScreen(owner: String, repo: String) {
                             model = repository?.owner?.avatarUrl,
                             contentDescription = repository?.owner?.avatarUrl.toString(),
                             placeholder = painterResource(id = R.drawable.avatar_default),
-                            error = if(repLog)painterResource(id = R.drawable.image_fail)else null,
+                            error = if (repLog) painterResource(id = R.drawable.image_fail) else null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .size(
-                                    SizeManager(
-                                        LocalConfiguration.current.screenHeightDp,
-                                        LocalConfiguration.current.screenWidthDp
-                                    ).giveNeed(130.dp, 150.dp, 160.dp)
+                                    sizeManager.giveNeed(130.dp, 150.dp, 160.dp)
                                 )
                                 .clip(CircleShape)
                                 .placeholder(enabled = !repLog)

@@ -29,7 +29,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +45,8 @@ import com.mir.repgit.R
 import com.mir.repgit.screens.navigation.Route
 import com.mir.repgit.tools.LoadState
 import com.mir.repgit.tools.NextPackRepositoryState
+import com.mir.repgit.tools.composable.network.ConnectivityState
+import com.mir.repgit.tools.composable.network.rememberConnectivityState
 import com.mir.repgit.ui.layout.BackgroundContainer
 import com.mir.repgit.ui.layout.ItemRep
 import com.mir.repgit.ui.layout.SearchField
@@ -53,17 +55,23 @@ import com.mir.repgit.ui.theme.dirtyWhite
 import com.mir.repgit.ui.theme.mint
 import com.mir.repgit.values.LocalNavController
 import com.mir.repgit.viewmodel.MainViewModel
+import dev.icerock.moko.mvvm.livedata.compose.observeAsState
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.compose.koinInject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun MainSearchScreen() {
     val viewModel = koinInject<MainViewModel>()
     val navController = LocalNavController.current!!
-    val value = viewModel.searchValue.observeAsState().value!!
-    val active = viewModel.activeSearch.observeAsState().value!!
-    val isFirstSetup = viewModel.firstSetupApp.observeAsState().value!!
+    val value = viewModel.searchValue.observeAsState().value
+    val active = viewModel.activeSearch.observeAsState().value
+    val isFirstSetup = viewModel.firstSetupApp.observeAsState().value
     val repositories = viewModel.repositories.observeAsState().value
+    val connectEthernet by rememberConnectivityState()
+    val context = LocalContext.current
+    val searchState = rememberLazyListState()
     BackgroundContainer(modifier = Modifier.fillMaxSize()) {
         Spacer(modifier = Modifier.size(100.dp))
         WelcomeButton(modifier = Modifier
@@ -71,8 +79,7 @@ fun MainSearchScreen() {
             .zIndex(1f)
             .background(Color.Transparent),
             expanded = !isFirstSetup,
-            onClick = { viewModel.closeWelcomeWindow(true) }
-        )
+            onClick = { viewModel.closeWelcomeWindow(true) })
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -81,8 +88,7 @@ fun MainSearchScreen() {
             verticalArrangement = Arrangement.Top
         ) {
             AnimatedVisibility(
-                visible = isFirstSetup,
-                enter = fadeIn(tween(300, 500))
+                visible = isFirstSetup, enter = fadeIn(tween(300, 500))
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -97,7 +103,8 @@ fun MainSearchScreen() {
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = stringResource(id = R.string.app_name), color = dirtyWhite,
+                                text = stringResource(id = R.string.app_name),
+                                color = dirtyWhite,
                                 textAlign = TextAlign.Center,
                                 style = TextStyle(fontSize = 25.sp)
                             )
@@ -117,53 +124,81 @@ fun MainSearchScreen() {
                                         .matchParentSize()
                                         .defaultMinSize(114.dp, 114.dp),
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "arrow_back", tint = dirtyWhite
+                                    contentDescription = "arrow_back",
+                                    tint = dirtyWhite
                                 )
                             }
                         }
                     }
-                    val context = LocalContext.current
-                    val searchState = rememberLazyListState()
                     LaunchedEffect(searchState) {
                         snapshotFlow {
                             searchState.firstVisibleItemIndex
                         }.collectLatest { index ->
-                            if (!viewModel.repositories.value.isNullOrEmpty()) if (index > viewModel.repositories.value!!.size - 15) {
-                                viewModel.nextPage(onSuccess = {}, onError = { message: String? ->
-                                    Toast.makeText(
-                                        context, message ?: "Unknown Error", Toast.LENGTH_LONG
-                                    ).show()
-                                })
+                            if (connectEthernet == ConnectivityState.Available) {
+                                if (viewModel.repositories.value.isNotEmpty() && index > viewModel.repositories.value.size - 15) {
+                                    viewModel.nextPage(onSuccess = {},
+                                        onError = { message: String? ->
+
+                                            Toast.makeText(
+                                                context,
+                                                message ?: "Unknown Error",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        })
+                                }
                             }
                         }
                     }
                     SearchField(modifier = Modifier.fillMaxWidth(0.9f),
                         value = value,
                         onValueChange = {
-                                viewModel.changeSearchValue(it)
+                            viewModel.changeSearchValue(it)
                         },
                         onActiveChange = { viewModel.changeActiveSearch(it) },
                         active = active,
                         onSearch = {
-                          viewModel.search(onError = {Toast.makeText(context,it,Toast.LENGTH_LONG).show() }, onSuccess = {})
+                            if (connectEthernet == ConnectivityState.Available) {
+                                viewModel.search(onError = {
+                                    Toast.makeText(
+                                        context, it, Toast.LENGTH_LONG
+                                    ).show()
+                                }, onSuccess = {})
+                            } else {
+                                Toast.makeText(
+                                    context, "Check your internet connection", Toast.LENGTH_LONG
+                                ).show()
+                            }
                         },
                         searchState = searchState,
                         content = {
                             item {
-                                AnimatedVisibility(visible = viewModel.reloadSearch.observeAsState().value == LoadState.SHOW) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.padding(5.dp), color = mint
-                                    )
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(5.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    this@Row.AnimatedVisibility(visible = viewModel.reloadSearch.observeAsState().value == LoadState.SHOW) {
+                                        CircularProgressIndicator(
+                                            color = mint
+                                        )
+                                    }
+                                    this@Row.AnimatedVisibility(visible = viewModel.reloadSearch.observeAsState().value != LoadState.SHOW && repositories.isNotEmpty()) {
+                                        Text(
+                                            text = "${viewModel.countResult.observeAsState().value}  result",
+                                            style = TextStyle(fontSize = 12.sp, color = mint)
+                                        )
+                                    }
                                 }
                             }
-                            items(repositories?.size ?: 0) {
+                            items(repositories.size) {
                                 ItemRep(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(120.dp)
                                         .clickable {},
                                     contentPadding = PaddingValues(8.dp),
-                                    repository = repositories!![it]
+                                    repository = repositories[it]
                                 ) {
                                     navController.navigate(Route.REPOSITORY_SCREEN.path + "${repositories[it].owner.name}/${repositories[it].name}")
                                 }
@@ -184,8 +219,7 @@ fun MainSearchScreen() {
                         })
                 }
             }
+
         }
-
-
     }
 }
