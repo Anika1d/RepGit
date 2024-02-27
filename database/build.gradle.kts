@@ -1,5 +1,6 @@
 val koinVersion = rootProject.extra["koin_version"] as String
 val roomVersion = rootProject.extra["room_version"] as String
+val mokoVersion= rootProject.extra["moko_version"] as String
 
 
 plugins {
@@ -19,7 +20,9 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
-
+    ksp {
+        arg("room.schemaLocation", "$projectDir/schemas")
+    }
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -55,4 +58,8 @@ dependencies {
     implementation ("androidx.room:room-ktx:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
 
+    /**
+     * Moko implementation
+     */
+    implementation("dev.icerock.moko:mvvm-livedata-compose:$mokoVersion")
 }
