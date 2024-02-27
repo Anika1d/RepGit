@@ -18,3 +18,4 @@ dependencyResolutionManagement {
 rootProject.name = "RepGit"
 include(":app")
 include(":core")
+include(":database")

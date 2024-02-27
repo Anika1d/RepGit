@@ -86,6 +86,8 @@ dependencies {
 
 
     implementation(project(":core"))
+    implementation(project(":database"))
+
 
 
     testImplementation("junit:junit:4.13.2")
