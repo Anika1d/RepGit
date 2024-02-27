@@ -7,7 +7,7 @@ import com.mir.core.usecase.RepositoryUseCase
 import com.mir.core.usecase.SearchUseCase
 import org.koin.dsl.module
 
-val coreModule = module {
+internal val coreModule = module {
     single { KtorClient.provide() }
     single { ImplGithubRepository(client = get()) }
 }

@@ -9,21 +9,18 @@ import com.mir.database.usecase.InsertSearchQueryUseCase
 import org.koin.android.ext.koin.androidApplication
 import org.koin.dsl.module
 
-val databaseModule =
-    module {
-        single {
-            Room.databaseBuilder(
-                androidApplication(),
-                AppDatabase::class.java,
-                "search_query_database"
-            ).build()
-        }
+internal val databaseModule = module {
+    single {
+        Room.databaseBuilder(
+            androidApplication(), AppDatabase::class.java, "search_query_database"
+        ).build()
     }
-val daosModule = module {
+}
+internal val daosModule = module {
     includes(databaseModule)
     single { get<AppDatabase>().searchQueryDao() }
 }
-val repositoryModule = module {
+internal val repositoryModule = module {
     includes(daosModule)
     single { ImplSearchQueryRepository(dao = get()) }
 }
