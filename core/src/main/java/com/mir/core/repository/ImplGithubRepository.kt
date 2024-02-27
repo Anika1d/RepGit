@@ -69,8 +69,7 @@ class ImplGithubRepository : IGithubRepository, KoinComponent {
 
             } catch (ce: CancellationException) {
                 Log.e("infos", ce.stackTrace.toString())
-                emit(ResultState.Error(ce, HttpStatusCode.TooManyRequests))
-                throw ce
+                emit(ResultState.Error(ce, HttpStatusCode.BadRequest))
             } catch (e: Exception) {
                 emit(ResultState.Error(e, HttpStatusCode.BadRequest))
             }

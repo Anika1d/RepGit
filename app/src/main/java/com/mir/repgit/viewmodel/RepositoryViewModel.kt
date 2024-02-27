@@ -11,6 +11,7 @@ import com.mir.core.data.response.ResultState
 import com.mir.core.usecase.IssuesUseCase
 import com.mir.core.usecase.RepositoryUseCase
 import dev.icerock.moko.mvvm.viewmodel.ViewModel
+import kotlinx.coroutines.launch
 
 class RepositoryViewModel(
     private val repositoryUseCase: RepositoryUseCase,
@@ -33,10 +34,11 @@ class RepositoryViewModel(
     val dataIssuesReceived: LiveData<Boolean>
         get() = _dataIssuesReceived
 
-    suspend fun getRepository(
+     fun getRepository(
         nameRep: String, nameOwner: String,
         onSuccess: () -> Unit, onError: (String?) -> Unit
     ) {
+        viewModelScope.launch {
         repositoryUseCase.getRepository(
             RepositoryRequest(
                 nameOwner = nameOwner,
@@ -60,41 +62,42 @@ class RepositoryViewModel(
             _dataRepositoryReceived.value=true
         }
 
-    }
+    }}
 
-    suspend fun getIssues(
+     fun getIssues(
         nameRep: String,
         nameOwner: String,
         onSuccess: () -> Unit,
         onError: (String?) -> Unit
     ) {
-        Log.i("issuie","send")
-        issuesUseCase.getIssues(
-            IssuesRequest(
-                nameRepository = nameRep,
-                nameOwner = nameOwner
-            )
-        ).collect { result ->
-            when (result) {
-                is ResultState.Success -> {
-                    _issues.postValue( result.data)
-                    Log.i("issuie","success")
-                    onSuccess.invoke()
-                }
-                is ResultState.NetworkError -> {
-                    Log.i("issuie","fail")
-                    Log.i("issuie",result.error.message)
-                    onError.invoke(result.error.message)
-                }
+        viewModelScope.launch {
+            issuesUseCase.getIssues(
+                IssuesRequest(
+                    nameRepository = nameRep,
+                    nameOwner = nameOwner
+                )
+            ).collect { result ->
+                when (result) {
+                    is ResultState.Success -> {
+                        _issues.postValue(result.data)
+                        Log.i("issuie", "success")
+                        onSuccess.invoke()
+                    }
 
-                is ResultState.Error -> {
-                    Log.i("issuie","fail")
-                    Log.i("issuie",result.error.message.toString())
-                    onError.invoke(result.error.message)
+                    is ResultState.NetworkError -> {
+                        Log.i("issuie", "fail")
+                        Log.i("issuie", result.error.message)
+                        onError.invoke(result.error.message)
+                    }
+
+                    is ResultState.Error -> {
+                        Log.i("issuie", "fail")
+                        Log.i("issuie", result.error.message.toString())
+                        onError.invoke(result.error.message)
+                    }
                 }
             }
         }
-        Log.i("issuie","end")
     }
 
     fun clearData() {

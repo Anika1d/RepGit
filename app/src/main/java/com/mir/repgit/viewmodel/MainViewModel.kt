@@ -11,7 +11,7 @@ import com.mir.core.usecase.SearchUseCase
 import com.mir.repgit.tools.LoadState
 import com.mir.repgit.tools.NextPackRepositoryState
 import dev.icerock.moko.mvvm.viewmodel.ViewModel
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MainViewModel(
     private val searchUseCase: SearchUseCase
@@ -48,52 +48,58 @@ class MainViewModel(
         _firstSetupApp.value = b
     }
 
-    suspend fun nextPage(onSuccess: () -> Unit, onError: (String?) -> Unit) {
-        delay(300)
-        if (_needAddResult.value == NextPackRepositoryState.POSSIBLE) {
-            _needAddResult.value = NextPackRepositoryState.LOAD
-            lastSearchPage.value?.nextPage?.let {
-                search(searchR = SearchRequest.fromUrl(it),
-                    onSuccess = { onSuccess.toString() },
-                    onError = { mes -> onError.invoke(mes) })
+    fun nextPage(onSuccess: () -> Unit, onError: (String?) -> Unit) {
+        viewModelScope.launch {
+            if (_needAddResult.value == NextPackRepositoryState.POSSIBLE) {
+                _needAddResult.value = NextPackRepositoryState.LOAD
+                lastSearchPage.value?.nextPage?.let {
+                    search(searchR = SearchRequest.fromUrl(it),
+                        onSuccess = { onSuccess.toString() },
+                        onError = { mes ->
+                            _needAddResult.postValue(NextPackRepositoryState.POSSIBLE)
+                            onError.invoke(mes)
+                        })
+                }
+
             }
-            _needAddResult.value =
-                if (lastSearchPage.value?.nextPage != null) NextPackRepositoryState.POSSIBLE else NextPackRepositoryState.IMPOSSIBLE
         }
     }
 
-    suspend fun search(
+    fun search(
         searchR: SearchRequest? = null, onSuccess: () -> Unit, onError: (String?) -> Unit
     ) {
-        val sR: SearchRequest? = searchR
-            ?: if (searchValue.value.isNullOrEmpty()) null else SearchRequest(query = searchValue.value!!)
-        if (sR != null) {
-            _reloadSearch.value = LoadState.SHOW
-            Log.i("vmv", "request send")
-            searchUseCase.search(sR).collect { result ->
-                when (result) {
-                    is ResultState.Success -> {
-                        val list = _repositories.value?.toMutableList() ?: mutableListOf()
-                        val page = result.data
-                        list.addAll(page?.items?.map { it } ?: listOf())
-                        _repositories.postValue(list)
-                        lastSearchPage.value = page
-                        _needAddResult.value =
-                            if (page?.nextPage != null) NextPackRepositoryState.POSSIBLE else NextPackRepositoryState.IMPOSSIBLE
-                        onSuccess.invoke()
-                    }
-
-                    is ResultState.NetworkError -> {
-                        onError.invoke(result.error.message)
-                    }
-                    is ResultState.Error -> {
-                        onError.invoke(result.error.message)
+        viewModelScope.launch {
+            val sR: SearchRequest? = searchR
+                ?: if (searchValue.value.isNullOrEmpty()) null else SearchRequest(query = searchValue.value!!)
+            if (sR != null) {
+                _reloadSearch.value = LoadState.SHOW
+                Log.i("vmv", "request send")
+                searchUseCase.search(sR).collect { result ->
+                    when (result) {
+                        is ResultState.Success -> {
+                            val list = _repositories.value?.toMutableList() ?: mutableListOf()
+                            val page = result.data
+                            list.addAll(page?.items?.map { it } ?: listOf())
+                            _repositories.postValue(list)
+                            lastSearchPage.value = page
+                            _needAddResult.value =
+                                if (page?.nextPage != null) NextPackRepositoryState.POSSIBLE else NextPackRepositoryState.IMPOSSIBLE
+                            onSuccess.invoke()
+                        }
+                        is ResultState.NetworkError -> {
+                            onError.invoke(result.error.message)
+                        }
+                        is ResultState.Error -> {
+                            if (result.statusCode2Int==400)
+                                onError.invoke("Что-то пошло не так, попробуйте позже")
+                            else
+                                onError.invoke(result.error.message)
+                        }
                     }
                 }
+                _reloadSearch.value = LoadState.HIDE
+                Log.i("vmv", "request end")
             }
-            _reloadSearch.value = LoadState.HIDE
-            Log.i("vmv", "request end")
-
         }
     }
 

@@ -28,9 +28,11 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,25 +62,25 @@ import com.mir.repgit.ui.theme.dirtyWhite
 import com.mir.repgit.ui.theme.mint
 import com.mir.repgit.values.LocalNavController
 import com.mir.repgit.viewmodel.RepositoryViewModel
-import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RepositoryScreen(owner: String, repo: String) {
     val sheetState = rememberBottomSheetScaffoldState()
-    val coroutineScope = rememberCoroutineScope()
     val viewModel = koinInject<RepositoryViewModel>()
     val navController = LocalNavController.current!!
     val repository = viewModel.repository.observeAsState().value
     val issues = viewModel.issues.observeAsState().value
     val repLog = viewModel.dataRepositoryReceived.observeAsState().value!!
-    remember(owner) {
-        coroutineScope.launch {
+    var initialApiCalled by rememberSaveable { mutableStateOf(false) }
+    if (!initialApiCalled) {
+    LaunchedEffect(Unit) {
             viewModel.clearData()
             viewModel.getRepository(nameOwner = owner, nameRep = repo, onSuccess = {}, onError = {})
             viewModel.getIssues(nameOwner = owner, nameRep = repo, onSuccess = {}, onError = {})
-        }
+            initialApiCalled=true
+    }
     }
 
     val pullToRefreshState = rememberPullToRefreshState()

@@ -258,7 +258,11 @@ fun SearchField(
                     textStyle = LocalTextStyle.current.merge(TextStyle(color = textColor)),
                     cursorBrush = SolidColor(colors.cursorColor),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = { onSearch(value) }),
+                    keyboardActions = KeyboardActions(onSearch = {
+                        focusManager.clearFocus()
+                        onSearch(value)
+                    }
+                    ),
                     interactionSource = interactionSource,
                     decorationBox = @Composable { innerTextField ->
                         TextFieldDefaults.DecorationBox(
@@ -287,6 +291,7 @@ fun SearchField(
                 )
                 IconButton(modifier = Modifier.fillMaxWidth(), onClick = {
                     if (!active) onActiveChange(true)
+                    focusManager.clearFocus()
                     onSearch(value)
                 }) {
                     Image(

@@ -1,6 +1,5 @@
 package com.mir.repgit.screens.main
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -31,7 +30,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,7 +41,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import androidx.core.os.bundleOf
 import com.mir.repgit.R
 import com.mir.repgit.screens.navigation.Route
 import com.mir.repgit.tools.LoadState
@@ -52,10 +49,11 @@ import com.mir.repgit.ui.layout.BackgroundContainer
 import com.mir.repgit.ui.layout.ItemRep
 import com.mir.repgit.ui.layout.SearchField
 import com.mir.repgit.ui.layout.WelcomeButton
+import com.mir.repgit.ui.theme.dirtyWhite
+import com.mir.repgit.ui.theme.mint
 import com.mir.repgit.values.LocalNavController
 import com.mir.repgit.viewmodel.MainViewModel
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 @Composable
@@ -66,7 +64,6 @@ fun MainSearchScreen() {
     val active = viewModel.activeSearch.observeAsState().value!!
     val isFirstSetup = viewModel.firstSetupApp.observeAsState().value!!
     val repositories = viewModel.repositories.observeAsState().value
-    val coroutineScope = rememberCoroutineScope()
     BackgroundContainer(modifier = Modifier.fillMaxSize()) {
         Spacer(modifier = Modifier.size(100.dp))
         WelcomeButton(modifier = Modifier
@@ -100,8 +97,7 @@ fun MainSearchScreen() {
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = stringResource(id = R.string.app_name),
-                                color = Color.White,
+                                text = stringResource(id = R.string.app_name), color = dirtyWhite,
                                 textAlign = TextAlign.Center,
                                 style = TextStyle(fontSize = 25.sp)
                             )
@@ -121,8 +117,7 @@ fun MainSearchScreen() {
                                         .matchParentSize()
                                         .defaultMinSize(114.dp, 114.dp),
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "",
-                                    tint = Color(0xFFFAFAFA)
+                                    contentDescription = "arrow_back", tint = dirtyWhite
                                 )
                             }
                         }
@@ -145,22 +140,20 @@ fun MainSearchScreen() {
                     SearchField(modifier = Modifier.fillMaxWidth(0.9f),
                         value = value,
                         onValueChange = {
-                            coroutineScope.launch {
                                 viewModel.changeSearchValue(it)
-                            }
                         },
                         onActiveChange = { viewModel.changeActiveSearch(it) },
                         active = active,
                         onSearch = {
-                            coroutineScope.launch {
-                                viewModel.search(onError = {}, onSuccess = {})
-                            }
+                          viewModel.search(onError = {Toast.makeText(context,it,Toast.LENGTH_LONG).show() }, onSuccess = {})
                         },
                         searchState = searchState,
                         content = {
                             item {
                                 AnimatedVisibility(visible = viewModel.reloadSearch.observeAsState().value == LoadState.SHOW) {
-                                    CircularProgressIndicator()
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.padding(5.dp), color = mint
+                                    )
                                 }
                             }
                             items(repositories?.size ?: 0) {
@@ -176,9 +169,17 @@ fun MainSearchScreen() {
                                 }
                             }
                             item {
-                                AnimatedVisibility(visible = viewModel.needAddResult.observeAsState().value == NextPackRepositoryState.LOAD) {
-                                    CircularProgressIndicator()
-                                }
+                                Box(
+                                    modifier = Modifier.size(100.dp),
+                                    contentAlignment = Alignment.Center,
+                                    content = {
+                                        this@Row.AnimatedVisibility(visible = viewModel.needAddResult.observeAsState().value == NextPackRepositoryState.LOAD) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.padding(5.dp), color = mint
+                                            )
+                                        }
+                                    },
+                                )
                             }
                         })
                 }

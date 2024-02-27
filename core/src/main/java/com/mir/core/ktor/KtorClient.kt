@@ -3,6 +3,7 @@ package com.mir.core.ktor
 import com.mir.core.BuildConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.ANDROID
@@ -32,6 +33,11 @@ object KtorClient {
                 contentType = ContentType.Application.Json,
             )
 
+        }
+        this.install(HttpTimeout){
+            requestTimeoutMillis = 1000*60
+            connectTimeoutMillis =1000*10
+            socketTimeoutMillis = 3000
         }
         this.install(Logging) {
             logger = Logger.ANDROID
