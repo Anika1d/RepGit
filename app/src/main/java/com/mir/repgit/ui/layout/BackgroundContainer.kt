@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.mir.repgit.R
+import com.mir.repgit.tools.network.ConnectivityState
 import com.mir.repgit.ui.theme.lineBackgroundColor
 import com.mir.repgit.ui.theme.mint
 
@@ -24,6 +25,7 @@ fun BackgroundContainer(
     modifier: Modifier,
     contentAlignment: Alignment = Alignment.Center,
     propagateMinConstraints: Boolean = false,
+    connectEthernet: ConnectivityState,
     checkEthernetView: @Composable () -> Unit = {
         ConnectionLayout(onAvailable = { },
             onUnavailable = {
@@ -37,7 +39,8 @@ fun BackgroundContainer(
                             tint = mint
                         )
                     })
-            })
+            },
+            connectEthernet = connectEthernet)
     },
     content: @Composable BoxScope.() -> Unit,
 ) {
@@ -100,5 +103,6 @@ fun BackgroundContainer(
 @Preview(showBackground = true)
 @Composable
 fun PreviewBackgroundContainer() {
-    BackgroundContainer(modifier = Modifier.fillMaxSize(), content = {})
+    BackgroundContainer(modifier = Modifier.fillMaxSize(),
+        connectEthernet= ConnectivityState.Undefined,content = {})
 }

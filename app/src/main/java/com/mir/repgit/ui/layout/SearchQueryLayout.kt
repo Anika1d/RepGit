@@ -33,9 +33,10 @@ fun SearchQueryLayout(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
+            modifier=Modifier.padding(4.dp),
             text = item.name, style = TextStyle(
                 color = dirtyWhite,
-                fontSize = 15.sp
+                fontSize = 19.sp
             ),
             maxLines = 1, overflow = TextOverflow.Ellipsis
         )

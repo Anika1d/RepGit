@@ -51,6 +51,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -112,8 +113,10 @@ fun SearchField(
         ),
     shape: Shape = RoundedCornerShape(22f),
     searchState: LazyListState = rememberLazyListState(),
+    focusManager:FocusManager= LocalFocusManager.current,
     content: LazyListScope.() -> Unit,
 ) {
+
     val interactionSource = remember { MutableInteractionSource() }
     val animationProgress: State<Float> = animateFloatAsState(
         targetValue = if (active) 1f else 0f,
@@ -129,7 +132,6 @@ fun SearchField(
         ), label = ""
     )
 
-    val focusManager = LocalFocusManager.current
     val density = LocalDensity.current
 
     val defaultInputFieldShape = SearchBarDefaults.inputFieldShape
