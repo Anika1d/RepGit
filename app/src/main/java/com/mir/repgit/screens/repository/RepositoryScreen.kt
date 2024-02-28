@@ -1,6 +1,7 @@
 package com.mir.repgit.screens.repository
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.foundation.layout.Arrangement
@@ -33,8 +34,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -84,12 +83,28 @@ fun RepositoryScreen(owner: String, repo: String) {
     val sizeManager by remember {
         mutableStateOf(
             SizeManager(
-                configuration.screenHeightDp, configuration.screenWidthDp
+                configuration.screenHeightDp,
+                configuration.screenWidthDp
             )
         )
     }
-    val connectEthernet = viewModel.networkStatus.collectAsState().value
-    var initialApiCalled by rememberSaveable { mutableStateOf(false) }
+    val connectEthernet = remember(viewModel) {
+        viewModel.networkStatus
+    }.collectAsState()
+
+    BackHandler {
+        viewModel.clearData()
+    }
+
+    LaunchedEffect(key1 = connectEthernet.value, block = {
+        if (connectEthernet.value == ConnectivityState.Available) {
+            viewModel.getAllInfoRep(owner = owner,
+                repo = repo,
+                onSuccess = { },
+                onError = {})
+        }
+    })
+
     val pullToRefreshState = rememberPullToRefreshState()
 
     val scaleFraction =
@@ -97,25 +112,18 @@ fun RepositoryScreen(owner: String, repo: String) {
             pullToRefreshState.progress
         ).coerceIn(0f, 1f)
 
-
-    if (!initialApiCalled || pullToRefreshState.isRefreshing) {
+    if (pullToRefreshState.isRefreshing) {
         LaunchedEffect(true) {
-            if (connectEthernet == ConnectivityState.Available) {
+            if (connectEthernet.value == ConnectivityState.Available) {
                 if (!pullToRefreshState.isRefreshing) viewModel.clearData()
-                viewModel.getRepository(nameOwner = owner,
-                    nameRep = repo,
-                    onSuccess = {},
-                    onError = {})
-                viewModel.getIssues(nameOwner = owner,
-                    nameRep = repo,
+                viewModel.getAllInfoRep(owner = owner,
+                    repo = repo,
                     onSuccess = { if (pullToRefreshState.isRefreshing) pullToRefreshState.endRefresh() },
                     onError = { if (pullToRefreshState.isRefreshing) pullToRefreshState.endRefresh() })
-                initialApiCalled = true
             } else {
                 Toast.makeText(
                     context, "Check your internet connection", Toast.LENGTH_LONG
                 ).show()
-                initialApiCalled = true
                 if (pullToRefreshState.isRefreshing) pullToRefreshState.endRefresh()
             }
         }
@@ -124,7 +132,7 @@ fun RepositoryScreen(owner: String, repo: String) {
         modifier = Modifier
             .fillMaxSize()
             .nestedScroll(pullToRefreshState.nestedScrollConnection),
-        connectEthernet = connectEthernet
+        connectEthernet = connectEthernet.value
     ) {
         PullToRefreshContainer(modifier = Modifier
             .align(Alignment.TopCenter)
@@ -154,6 +162,7 @@ fun RepositoryScreen(owner: String, repo: String) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(modifier = Modifier, onClick = {
+                    viewModel.clearData()
                     navController.navigateUp()
                 }) {
                     Icon(
