@@ -1,5 +1,6 @@
 package com.mir.repgit.viewmodel
 
+import android.util.Log
 import com.mir.core.data.model.repository.PageRepository
 import com.mir.core.data.model.repository.RepositoryItem
 import com.mir.core.data.request.SearchRequest
@@ -14,6 +15,8 @@ import com.mir.repgit.tools.LoadState
 import com.mir.repgit.tools.NextPackRepositoryState
 import com.mir.repgit.tools.network.ConnectivityState
 import com.mir.repgit.tools.network.ImplEthernetConnectivityService
+import com.mir.repgit.tools.timer.Timer
+import com.mir.repgit.tools.timer.TimerState
 import dev.icerock.moko.mvvm.livedata.LiveData
 import dev.icerock.moko.mvvm.livedata.MutableLiveData
 import dev.icerock.moko.mvvm.livedata.map
@@ -30,8 +33,10 @@ class MainViewModel(
     private val deleteSearchQueryUseCase: DeleteSearchQueryUseCase,
     private val insertSearchQueryUseCase: InsertSearchQueryUseCase,
     private val getSearchQueryUseCase: GetSearchQueryUseCase,
-    private val implEthernetConnectivityService: ImplEthernetConnectivityService
+    private val implEthernetConnectivityService: ImplEthernetConnectivityService,
 ) : ViewModel() {
+
+    private val timer = Timer(timeEvent = 300)
 
     val networkStatus: StateFlow<ConnectivityState> =
         implEthernetConnectivityService.connectivityState.stateIn(
@@ -80,6 +85,7 @@ class MainViewModel(
 
     fun nextPage(onSuccess: () -> Unit, onError: (String?) -> Unit) {
         viewModelScope.launch {
+            Log.i("nextpage", "use")
             if (_needAddResult.value == NextPackRepositoryState.POSSIBLE) {
                 _needAddResult.value = NextPackRepositoryState.LOAD
                 lastSearchPage.value?.nextPage?.let {
@@ -95,12 +101,14 @@ class MainViewModel(
         }
     }
 
-    suspend fun getSearchValue(s: String) {
-       viewModelScope.launch {
-        getSearchQueryUseCase.invoke(SearchQueryRequest(name = s, limit = 5)).cancellable().collect {
-            _searchQueries.value = it
-            this.cancel()
-        }}
+    private suspend fun getSearchValue(s: String) {
+        viewModelScope.launch {
+            getSearchQueryUseCase.invoke(SearchQueryRequest(name = s, limit = 5)).cancellable()
+                .collect {
+                    _searchQueries.value = it
+                    this.cancel()
+                }
+        }
     }
 
     fun deleteSearchValue(searchQuery: SearchQuery) {
@@ -110,7 +118,7 @@ class MainViewModel(
         }
     }
 
-    private fun insertSearchValue() {
+    fun insertSearchValue() {
         viewModelScope.launch {
             insertSearchQueryUseCase.insertSearchQuery(SearchQueryRequest(_searchValue.value))
         }
@@ -120,12 +128,14 @@ class MainViewModel(
     fun search(
         searchR: SearchRequest? = null, onSuccess: () -> Unit, onError: (String?) -> Unit
     ) {
-        insertSearchValue()
         viewModelScope.launch {
+            if (searchR == null) timer.destroy()
+            else timer.stop()
             val sR: SearchRequest? = searchR
                 ?: if (searchValue.value.isEmpty()) null else SearchRequest(query = searchValue.value)
             if (sR != null) {
                 _reloadSearch.value = LoadState.SHOW
+                clearSearchQueries()
                 searchUseCase.search(sR).collect { result ->
                     when (result) {
                         is ResultState.Success -> {
@@ -134,8 +144,8 @@ class MainViewModel(
                             list.addAll(page?.items?.map { it } ?: listOf())
                             _repositories.value = list
                             lastSearchPage.value = page
-                            _needAddResult.value =
-                                if (page?.nextPage != null) NextPackRepositoryState.POSSIBLE else NextPackRepositoryState.IMPOSSIBLE
+                            _needAddResult.value = (
+                                    if (page?.nextPage != null) NextPackRepositoryState.POSSIBLE else NextPackRepositoryState.IMPOSSIBLE)
                             onSuccess.invoke()
                         }
 
@@ -161,10 +171,20 @@ class MainViewModel(
         _activeSearch.value = b
     }
 
+
     fun changeSearchValue(s: String) {
         viewModelScope.launch {
-            _searchValue.value = s
+            if (timer.stateTimer.value == TimerState.End) {
+                  timer.start {
+                        lazy {
+                            search(SearchRequest(_searchValue.value), {}, {})
+                        }
+                    }
+            } else {
+                timer.setNewTime()
+            }
             _repositories.value = listOf()
+            _searchValue.value = s
             lastSearchPage.value = null
             getSearchValue(_searchValue.value)
 
@@ -175,4 +195,8 @@ class MainViewModel(
         _searchQueries.value = listOf()
     }
 
+    override fun onCleared() {
+        timer.destroy()
+        super.onCleared()
+    }
 }
