@@ -57,8 +57,8 @@ import androidx.compose.ui.zIndex
 import coil.compose.AsyncImage
 import com.mir.repgit.R
 import com.mir.repgit.tools.SizeManager
-import com.mir.repgit.tools.network.ConnectivityState
 import com.mir.repgit.tools.composable.placeholder.placeholder
+import com.mir.repgit.tools.network.ConnectivityState
 import com.mir.repgit.ui.layout.BackgroundContainer
 import com.mir.repgit.ui.layout.ItemIssue
 import com.mir.repgit.ui.layout.RepositoryDetails
@@ -68,29 +68,27 @@ import com.mir.repgit.ui.theme.mint
 import com.mir.repgit.values.LocalNavController
 import com.mir.repgit.viewmodel.RepositoryViewModel
 import dev.icerock.moko.mvvm.livedata.compose.observeAsState
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.compose.koinInject
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RepositoryScreen(owner: String, repo: String) {
     val sheetState = rememberBottomSheetScaffoldState()
     val viewModel = koinInject<RepositoryViewModel>()
     val navController = LocalNavController.current!!
-    val repository = viewModel.repository.observeAsState().value
-    val issues = viewModel.issues.observeAsState().value
-    val repLog = viewModel.dataRepositoryReceived.observeAsState().value
+    val repository = remember(viewModel) { viewModel.repository }.observeAsState()
+    val issues = remember(viewModel) { viewModel.issues }.observeAsState()
+    val repLog = remember(viewModel) { viewModel.dataRepositoryReceived }.observeAsState()
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
     val sizeManager by remember {
         mutableStateOf(
             SizeManager(
-                configuration.screenHeightDp,
-                configuration.screenWidthDp
+                configuration.screenHeightDp, configuration.screenWidthDp
             )
         )
     }
-    val connectEthernet =viewModel.networkStatus.collectAsState().value
+    val connectEthernet = viewModel.networkStatus.collectAsState().value
     var initialApiCalled by rememberSaveable { mutableStateOf(false) }
     val pullToRefreshState = rememberPullToRefreshState()
 
@@ -104,13 +102,11 @@ fun RepositoryScreen(owner: String, repo: String) {
         LaunchedEffect(true) {
             if (connectEthernet == ConnectivityState.Available) {
                 if (!pullToRefreshState.isRefreshing) viewModel.clearData()
-                viewModel.getRepository(
-                    nameOwner = owner,
+                viewModel.getRepository(nameOwner = owner,
                     nameRep = repo,
                     onSuccess = {},
                     onError = {})
-                viewModel.getIssues(
-                    nameOwner = owner,
+                viewModel.getIssues(nameOwner = owner,
                     nameRep = repo,
                     onSuccess = { if (pullToRefreshState.isRefreshing) pullToRefreshState.endRefresh() },
                     onError = { if (pullToRefreshState.isRefreshing) pullToRefreshState.endRefresh() })
@@ -128,7 +124,7 @@ fun RepositoryScreen(owner: String, repo: String) {
         modifier = Modifier
             .fillMaxSize()
             .nestedScroll(pullToRefreshState.nestedScrollConnection),
-        connectEthernet=connectEthernet
+        connectEthernet = connectEthernet
     ) {
         PullToRefreshContainer(modifier = Modifier
             .align(Alignment.TopCenter)
@@ -138,8 +134,7 @@ fun RepositoryScreen(owner: String, repo: String) {
             state = pullToRefreshState,
             indicator = { pullRefreshState ->
                 PullToRefreshDefaults.Indicator(
-                    modifier = Modifier.zIndex(1f),
-                    state = pullRefreshState, color = mint
+                    modifier = Modifier.zIndex(1f), state = pullRefreshState, color = mint
                 )
             })
         Column(Modifier.fillMaxSize()) {
@@ -170,8 +165,8 @@ fun RepositoryScreen(owner: String, repo: String) {
                 Text(
                     modifier = Modifier
                         .fillMaxWidth(0.8f)
-                        .placeholder(enabled = !repLog),
-                    text = repository?.name ?: "",
+                        .placeholder(enabled = !repLog.value),
+                    text = repository.value?.name ?: "",
                     textAlign = TextAlign.Center,
                     color = dirtyWhite
                 )
@@ -186,16 +181,17 @@ fun RepositoryScreen(owner: String, repo: String) {
                             item {
                                 Text(
                                     modifier = Modifier.animateContentSize(),
-                                    text = "Issues " + if (repository?.issuesCount != "0") "" else "not found",
+                                    text = "Issues " + if (repository.value?.issuesCount != "0") "" else "not found",
                                     style = TextStyle(
                                         fontSize = 35.sp
                                     )
                                 )
                             }
-                            items(issues?.size ?: 0) { index ->
+                            items(issues.value?.size ?: 0) { index ->
                                 Spacer(modifier = Modifier.size(20.dp))
                                 ItemIssue(
-                                    modifier = Modifier.fillMaxWidth(), issue = issues!![index]
+                                    modifier = Modifier.fillMaxWidth(),
+                                    issue = issues.value!![index]
                                 )
 
                             }
@@ -224,17 +220,17 @@ fun RepositoryScreen(owner: String, repo: String) {
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         AsyncImage(
-                            model = repository?.owner?.avatarUrl,
-                            contentDescription = repository?.owner?.avatarUrl.toString(),
+                            model = repository.value?.owner?.avatarUrl,
+                            contentDescription = repository.value?.owner?.avatarUrl.toString(),
                             placeholder = painterResource(id = R.drawable.avatar_default),
-                            error = if (repLog) painterResource(id = R.drawable.image_fail) else null,
+                            error = if (repLog.value) painterResource(id = R.drawable.image_fail) else null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .size(
                                     sizeManager.giveNeed(130.dp, 150.dp, 160.dp)
                                 )
                                 .clip(CircleShape)
-                                .placeholder(enabled = !repLog)
+                                .placeholder(enabled = !repLog.value)
 
                         )
                         Column(
@@ -245,8 +241,8 @@ fun RepositoryScreen(owner: String, repo: String) {
                             Text(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .placeholder(enabled = !repLog),
-                                text = repository?.owner?.name ?: "",
+                                    .placeholder(enabled = !repLog.value),
+                                text = repository.value?.owner?.name ?: "",
                                 color = dirtyWhite,
                                 style = TextStyle(
                                     fontFamily = FontFamily.Serif, fontSize = 23.sp
@@ -261,17 +257,17 @@ fun RepositoryScreen(owner: String, repo: String) {
 
                                 RepositoryDetails(
                                     modifier = Modifier.fillMaxWidth(0.5f),
-                                    item = repository?.starCount,
+                                    item = repository.value?.starCount,
                                     painter = painterResource(id = R.drawable.star),
                                     contentDescription = "git_star",
-                                    placeholder = !repLog
+                                    placeholder = !repLog.value
                                 )
                                 RepositoryDetails(
                                     modifier = Modifier,
-                                    item = repository?.forkCount,
+                                    item = repository.value?.forkCount,
                                     painter = painterResource(id = R.drawable.forks),
                                     contentDescription = "git_forks",
-                                    placeholder = !repLog
+                                    placeholder = !repLog.value
                                 )
                             }
                             Spacer(modifier = Modifier.size(20.dp))
@@ -282,17 +278,17 @@ fun RepositoryScreen(owner: String, repo: String) {
                             ) {
                                 RepositoryDetails(
                                     modifier = Modifier.fillMaxWidth(0.5f),
-                                    item = repository?.watchersCount,
+                                    item = repository.value?.watchersCount,
                                     painter = painterResource(id = R.drawable.watch),
                                     contentDescription = "git_watching",
-                                    placeholder = !repLog
+                                    placeholder = !repLog.value
                                 )
                                 RepositoryDetails(
                                     modifier = Modifier,
-                                    item = repository?.issuesCount,
+                                    item = repository.value?.issuesCount,
                                     painter = painterResource(id = R.drawable.issues),
                                     contentDescription = "git_branches",
-                                    placeholder = !repLog
+                                    placeholder = !repLog.value
                                 )
 
                             }
@@ -305,8 +301,8 @@ fun RepositoryScreen(owner: String, repo: String) {
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(10.dp)
-                            .placeholder(enabled = !repLog),
-                        text = repository?.description ?: "",
+                            .placeholder(enabled = !repLog.value),
+                        text = repository.value?.description ?: "",
                         color = dirtyWhite,
                     )
                     Spacer(modifier = Modifier.size(100.dp))
