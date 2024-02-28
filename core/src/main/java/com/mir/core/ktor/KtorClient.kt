@@ -2,7 +2,7 @@ package com.mir.core.ktor
 
 import com.mir.core.BuildConfig
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
+import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
@@ -19,8 +19,8 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
 object KtorClient {
-    fun provide() = HttpClient(CIO) {
-        this.install(ContentNegotiation) {
+    fun provide() = HttpClient(Android) {
+        install(ContentNegotiation) {
             json(
                 json = Json {
                     ignoreUnknownKeys = true
@@ -32,14 +32,13 @@ object KtorClient {
                 },
                 contentType = ContentType.Application.Json,
             )
-
         }
-        this.install(HttpTimeout){
+        install(HttpTimeout){
             requestTimeoutMillis = 1000*60
             connectTimeoutMillis =1000*10
             socketTimeoutMillis = 3000
         }
-        this.install(Logging) {
+        install(Logging) {
             logger = Logger.ANDROID
             level = LogLevel.ALL
         }
