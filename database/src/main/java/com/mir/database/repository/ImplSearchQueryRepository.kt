@@ -5,6 +5,7 @@ import com.mir.database.data.model.SearchQuery
 import com.mir.database.data.request.SearchQueryRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 
@@ -16,7 +17,7 @@ class ImplSearchQueryRepository(
             dao.getSearchQueriesByName(request.name, request.limit)
         else dao.getSearchQueriesByName(request.name)).map {
             it.map { sr -> SearchQuery(name = sr.name) }
-        }.flowOn(Dispatchers.IO)
+        }.flowOn(Dispatchers.IO).distinctUntilChanged()
     }
 
     override suspend fun insertSearchQuery(request: SearchQueryRequest) {
