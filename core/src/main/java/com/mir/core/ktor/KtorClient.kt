@@ -49,7 +49,7 @@ object KtorClient {
                 protocol = URLProtocol.HTTPS
                 headers {
                     append(HttpHeaders.Accept, "application/vnd.github+json")
-                    append(HttpHeaders.Authorization, "Bearer github_pat${BuildConfig.GITHUB_AUTH_TOKEN}")
+                    append(HttpHeaders.Authorization, "Bearer ${BuildConfig.GITHUB_AUTH_TOKEN}")
                 }
             }
         }

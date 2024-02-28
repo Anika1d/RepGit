@@ -23,7 +23,7 @@ android {
         this.forEach {
             it.buildConfigField( "String", "BASE_URL",  "\"https://api.github.com/\"")
             it.buildConfigField("String","HOST_NAME","\"api.github.com\"")
-            it.buildConfigField("String","GITHUB_AUTH_TOKEN","\"_11ARB6JOA0oXtaG3dKrR93_v1CAsPOkeevt1ilnSsfQfxQW44gagacIq4BCiTZHCizRPGSKDDD4p2eS6PO\"")
+            it.buildConfigField("String","GITHUB_AUTH_TOKEN","\"ВАШ ТОКЕН ДОСТУПА\"")
         }
         release {
             isMinifyEnabled = false
