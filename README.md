@@ -17,7 +17,7 @@
 
 Дизайн:
 ==================================================================
-<img src="https://github.com/Anika1d/RepGit/tree/master/readmeresg" width="300">
+![Начальный экран](readmeres/splash_screen.png)
 
 ![Главный экран](readmeres/main_screen.png)
 
