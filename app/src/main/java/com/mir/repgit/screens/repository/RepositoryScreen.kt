@@ -23,17 +23,20 @@ import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -67,12 +70,15 @@ import com.mir.repgit.ui.theme.mint
 import com.mir.repgit.values.LocalNavController
 import com.mir.repgit.viewmodel.RepositoryViewModel
 import dev.icerock.moko.mvvm.livedata.compose.observeAsState
+import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RepositoryScreen(owner: String, repo: String) {
-    val sheetState = rememberBottomSheetScaffoldState()
+    val sheetState = rememberBottomSheetScaffoldState(
+        bottomSheetState = rememberStandardBottomSheetState(skipHiddenState = false)
+    )
     val viewModel = koinInject<RepositoryViewModel>()
     val navController = LocalNavController.current!!
     val repository = remember(viewModel) { viewModel.repository }.observeAsState()
@@ -80,6 +86,7 @@ fun RepositoryScreen(owner: String, repo: String) {
     val repLog = remember(viewModel) { viewModel.dataRepositoryReceived }.observeAsState()
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
+    val coroutineScope = rememberCoroutineScope()
     val sizeManager by remember {
         mutableStateOf(
             SizeManager(
@@ -93,15 +100,17 @@ fun RepositoryScreen(owner: String, repo: String) {
     }.collectAsState()
 
     BackHandler {
-        viewModel.clearData()
+        if (sheetState.bottomSheetState.currentValue==SheetValue.Expanded) {
+            coroutineScope.launch { sheetState.bottomSheetState.partialExpand() }
+        } else {
+            viewModel.clearData()
+            navController.navigateUp()
+        }
     }
 
     LaunchedEffect(key1 = connectEthernet.value, block = {
         if (connectEthernet.value == ConnectivityState.Available) {
-            viewModel.getAllInfoRep(owner = owner,
-                repo = repo,
-                onSuccess = { },
-                onError = {})
+            viewModel.getAllInfoRep(owner = owner, repo = repo, onSuccess = { }, onError = {})
         }
     })
 
