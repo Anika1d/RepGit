@@ -1,7 +1,7 @@
-Стек: jetpack compose, koin, coil, ktor, room, moko , ksp.
+Стек: jetpack compose, koin, coil, ktor, room, moko, ksp.
 =================================================================
 Процесс сборки:
- =================================================================
+=================================================================
  1. Для успешной сборки вам необходимо, вставить свой токен доступа в файл  core/build.gradle.kts в 26 строчку
  2. Токен можно получить по ссылкке https://github.com/settings/tokens
 
@@ -14,3 +14,23 @@
 	   то при следующем вбивание  у вас вылезет вариант git. (за раз может выйти 5 вариантов)
 	
 3. Issues  лежат в BottomSheet на экране репозитория
+
+Дизайн:
+==================================================================
+<img src="https://github.com/Anika1d/RepGit/tree/master/readmeresg" height="300">
+
+![Главный экран](readmeres/main_screen.png)
+
+![Поиск с подсказками](readmeres/support.png)
+
+![Поиск с репозиториями](readmeres/result.png)
+
+![Поиск с репозиториями в альбомной ориентации](readmeres/result_B.png)
+
+![Анимация репозитория](readmeres/placeholder.png)
+
+![Репозиторий](readmeres/repository_screen.png)
+
+![Репозиторий с проблемами](readmeres/issues.png)
+
+![Репозиторий в альбомной ориентации](readmeres/issues_B.png)
