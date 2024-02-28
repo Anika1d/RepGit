@@ -10,13 +10,26 @@ import com.mir.core.data.request.RepositoryRequest
 import com.mir.core.data.response.ResultState
 import com.mir.core.usecase.IssuesUseCase
 import com.mir.core.usecase.RepositoryUseCase
+import com.mir.repgit.tools.network.ConnectivityState
+import com.mir.repgit.tools.network.ImplEthernetConnectivityService
 import dev.icerock.moko.mvvm.viewmodel.ViewModel
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class RepositoryViewModel(
     private val repositoryUseCase: RepositoryUseCase,
     private val issuesUseCase: IssuesUseCase,
+    private val implEthernetConnectivityService: ImplEthernetConnectivityService
 ) : ViewModel() {
+    val networkStatus: StateFlow<ConnectivityState> = implEthernetConnectivityService.connectivityState.stateIn(
+        initialValue = ConnectivityState.Undefined,
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000)
+    )
+
+
     private val _repository: MutableLiveData<RepositoryItem?> = MutableLiveData(null)
     val repository: LiveData<RepositoryItem?>
         get() = _repository

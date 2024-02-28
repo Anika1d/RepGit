@@ -1,6 +1,5 @@
 package com.mir.repgit.viewmodel
 
-import android.util.Log
 import com.mir.core.data.model.repository.PageRepository
 import com.mir.core.data.model.repository.RepositoryItem
 import com.mir.core.data.request.SearchRequest
@@ -13,10 +12,17 @@ import com.mir.database.usecase.GetSearchQueryUseCase
 import com.mir.database.usecase.InsertSearchQueryUseCase
 import com.mir.repgit.tools.LoadState
 import com.mir.repgit.tools.NextPackRepositoryState
+import com.mir.repgit.tools.network.ConnectivityState
+import com.mir.repgit.tools.network.ImplEthernetConnectivityService
 import dev.icerock.moko.mvvm.livedata.LiveData
 import dev.icerock.moko.mvvm.livedata.MutableLiveData
 import dev.icerock.moko.mvvm.livedata.map
 import dev.icerock.moko.mvvm.viewmodel.ViewModel
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.cancellable
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class MainViewModel(
@@ -24,7 +30,15 @@ class MainViewModel(
     private val deleteSearchQueryUseCase: DeleteSearchQueryUseCase,
     private val insertSearchQueryUseCase: InsertSearchQueryUseCase,
     private val getSearchQueryUseCase: GetSearchQueryUseCase,
+    private val implEthernetConnectivityService: ImplEthernetConnectivityService
 ) : ViewModel() {
+
+    val networkStatus: StateFlow<ConnectivityState> =
+        implEthernetConnectivityService.connectivityState.stateIn(
+            initialValue = ConnectivityState.Undefined,
+            scope = viewModelScope,
+            started = WhileSubscribed(5000)
+        )
 
     private val _searchQueries: MutableLiveData<List<SearchQuery>> = MutableLiveData(emptyList())
     val searchQueries: LiveData<List<SearchQuery>>
@@ -47,9 +61,11 @@ class MainViewModel(
     private val _firstSetupApp = MutableLiveData(false)
     val firstSetupApp: LiveData<Boolean>
         get() = _firstSetupApp
+
     private val _searchValue = MutableLiveData("")
     val searchValue: LiveData<String>
         get() = _searchValue
+
     private val _activeSearch = MutableLiveData(false)
     val activeSearch: LiveData<Boolean>
         get() = _activeSearch
@@ -79,12 +95,12 @@ class MainViewModel(
         }
     }
 
-    fun getSearchValue(s: String) {
-        viewModelScope.launch {
-            getSearchQueryUseCase.invoke(SearchQueryRequest(name = s, limit = 5)).collect {
-                _searchQueries.value = it
-            }
-        }
+    suspend fun getSearchValue(s: String) {
+       viewModelScope.launch {
+        getSearchQueryUseCase.invoke(SearchQueryRequest(name = s, limit = 5)).cancellable().collect {
+            _searchQueries.value = it
+            this.cancel()
+        }}
     }
 
     fun deleteSearchValue(searchQuery: SearchQuery) {
@@ -96,7 +112,7 @@ class MainViewModel(
 
     private fun insertSearchValue() {
         viewModelScope.launch {
-            insertSearchQueryUseCase.insertSearchQuery(SearchQueryRequest(searchValue.value))
+            insertSearchQueryUseCase.insertSearchQuery(SearchQueryRequest(_searchValue.value))
         }
     }
 
@@ -110,7 +126,6 @@ class MainViewModel(
                 ?: if (searchValue.value.isEmpty()) null else SearchRequest(query = searchValue.value)
             if (sR != null) {
                 _reloadSearch.value = LoadState.SHOW
-                Log.i("vmv", "request send")
                 searchUseCase.search(sR).collect { result ->
                     when (result) {
                         is ResultState.Success -> {
@@ -137,7 +152,7 @@ class MainViewModel(
                     }
                 }
                 _reloadSearch.value = LoadState.HIDE
-                Log.i("vmv", "request end")
+                this.cancel()
             }
         }
     }

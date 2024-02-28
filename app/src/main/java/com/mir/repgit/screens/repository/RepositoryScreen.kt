@@ -29,6 +29,7 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,8 +57,7 @@ import androidx.compose.ui.zIndex
 import coil.compose.AsyncImage
 import com.mir.repgit.R
 import com.mir.repgit.tools.SizeManager
-import com.mir.repgit.tools.composable.network.ConnectivityState
-import com.mir.repgit.tools.composable.network.rememberConnectivityState
+import com.mir.repgit.tools.network.ConnectivityState
 import com.mir.repgit.tools.composable.placeholder.placeholder
 import com.mir.repgit.ui.layout.BackgroundContainer
 import com.mir.repgit.ui.layout.ItemIssue
@@ -90,7 +90,7 @@ fun RepositoryScreen(owner: String, repo: String) {
             )
         )
     }
-    val connectEthernet by rememberConnectivityState()
+    val connectEthernet =viewModel.networkStatus.collectAsState().value
     var initialApiCalled by rememberSaveable { mutableStateOf(false) }
     val pullToRefreshState = rememberPullToRefreshState()
 
@@ -127,7 +127,8 @@ fun RepositoryScreen(owner: String, repo: String) {
     BackgroundContainer(
         modifier = Modifier
             .fillMaxSize()
-            .nestedScroll(pullToRefreshState.nestedScrollConnection)
+            .nestedScroll(pullToRefreshState.nestedScrollConnection),
+        connectEthernet=connectEthernet
     ) {
         PullToRefreshContainer(modifier = Modifier
             .align(Alignment.TopCenter)

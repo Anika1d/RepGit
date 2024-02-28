@@ -28,12 +28,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -44,8 +45,7 @@ import com.mir.repgit.R
 import com.mir.repgit.screens.navigation.Route
 import com.mir.repgit.tools.LoadState
 import com.mir.repgit.tools.NextPackRepositoryState
-import com.mir.repgit.tools.composable.network.ConnectivityState
-import com.mir.repgit.tools.composable.network.rememberConnectivityState
+import com.mir.repgit.tools.network.ConnectivityState
 import com.mir.repgit.ui.layout.BackgroundContainer
 import com.mir.repgit.ui.layout.ItemRep
 import com.mir.repgit.ui.layout.SearchField
@@ -56,11 +56,10 @@ import com.mir.repgit.ui.theme.mint
 import com.mir.repgit.values.LocalNavController
 import com.mir.repgit.viewmodel.MainViewModel
 import dev.icerock.moko.mvvm.livedata.compose.observeAsState
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.compose.koinInject
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun MainSearchScreen() {
     val viewModel = koinInject<MainViewModel>()
@@ -70,11 +69,14 @@ fun MainSearchScreen() {
     val isFirstSetup = viewModel.firstSetupApp.observeAsState().value
     val repositories = viewModel.repositories.observeAsState().value
     val searchQueries = viewModel.searchQueries.observeAsState().value
-
-    val connectEthernet by rememberConnectivityState()
+    val connectEthernet = viewModel.networkStatus.collectAsState().value
     val context = LocalContext.current
     val searchState = rememberLazyListState()
-    BackgroundContainer(modifier = Modifier.fillMaxSize()) {
+    val focusManager = LocalFocusManager.current
+    BackgroundContainer(
+        modifier = Modifier.fillMaxSize(),
+        connectEthernet = connectEthernet
+    ) {
         Spacer(modifier = Modifier.size(100.dp))
         WelcomeButton(modifier = Modifier
             .fillMaxSize(0.5f)
@@ -137,10 +139,9 @@ fun MainSearchScreen() {
                             searchState.firstVisibleItemIndex
                         }.collectLatest { index ->
                             if (connectEthernet == ConnectivityState.Available) {
-                                if (viewModel.repositories.value.isNotEmpty() && index > viewModel.repositories.value.size - 15) {
+                                if (repositories.isNotEmpty() && index > repositories.size - 15) {
                                     viewModel.nextPage(onSuccess = {},
                                         onError = { message: String? ->
-
                                             Toast.makeText(
                                                 context,
                                                 message ?: "Unknown Error",
@@ -158,7 +159,9 @@ fun MainSearchScreen() {
                         },
                         onActiveChange = {
                             viewModel.clearSearchQueries()
-                            viewModel.changeActiveSearch(it) },
+                            viewModel.changeActiveSearch(it)
+                        },
+                        focusManager = focusManager,
                         active = active,
                         onSearch = {
                             viewModel.clearSearchQueries()
@@ -167,7 +170,7 @@ fun MainSearchScreen() {
                                     Toast.makeText(
                                         context, it, Toast.LENGTH_LONG
                                     ).show()
-                                }, onSuccess = {})
+                                }, onSuccess = {  })
                             } else {
                                 Toast.makeText(
                                     context, "Check your internet connection", Toast.LENGTH_LONG
@@ -200,13 +203,14 @@ fun MainSearchScreen() {
                                 SearchQueryLayout(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(30.dp),
+                                        .height(50.dp),
                                     item =
                                     searchQueries[it],
                                     onDelete = {
                                         viewModel.deleteSearchValue( searchQueries[it])
                                     },
                                     onClick = {
+
                                         viewModel.changeSearchValue(searchQueries[it].name)
                                     },
                                 )
