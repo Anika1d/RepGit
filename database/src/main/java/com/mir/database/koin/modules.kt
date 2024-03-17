@@ -1,12 +1,15 @@
 package com.mir.database.koin
 
 import androidx.room.Room
+import com.mir.database.repository.ISearchQueryRepository
 import com.mir.database.repository.ImplSearchQueryRepository
 import com.mir.database.room.AppDatabase
 import com.mir.database.usecase.DeleteSearchQueryUseCase
 import com.mir.database.usecase.GetSearchQueryUseCase
 import com.mir.database.usecase.InsertSearchQueryUseCase
 import org.koin.android.ext.koin.androidApplication
+import org.koin.core.module.dsl.bind
+import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
 internal val databaseModule = module {
@@ -22,7 +25,7 @@ internal val daosModule = module {
 }
 internal val repositoryModule = module {
     includes(daosModule)
-    single { ImplSearchQueryRepository(dao = get()) }
+    singleOf(::ImplSearchQueryRepository) { bind<ISearchQueryRepository>() }
 }
 val useCaseDatabaseModule = module {
     includes(repositoryModule)
