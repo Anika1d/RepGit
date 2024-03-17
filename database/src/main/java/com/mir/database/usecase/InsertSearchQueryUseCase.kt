@@ -1,10 +1,10 @@
 package com.mir.database.usecase
 
 import com.mir.database.data.request.SearchQueryRequest
-import com.mir.database.repository.ImplSearchQueryRepository
+import com.mir.database.repository.ISearchQueryRepository
 import org.koin.core.component.KoinComponent
 
-class InsertSearchQueryUseCase (private val repository: ImplSearchQueryRepository) : KoinComponent {
+class InsertSearchQueryUseCase (private val repository: ISearchQueryRepository) : KoinComponent {
     suspend fun insertSearchQuery(request: SearchQueryRequest) {
         repository.insertSearchQuery(request)
     }
