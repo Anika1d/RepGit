@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">RepGit</string>
+    <string name="download_repositories">Скаченные репозитории</string>
+    <string name="download_started">Загрузка</string>
+    <string name="download_ended">Файл загружен</string>
+    <string name="check_connection">Проверьте сетевое соединение </string>
+    <string name="result">Найдено</string>
+    <string name="issues">Проблемы</string>
+    <string name="issues_not_found">Проблемы не обнаружено</string>
+    <string name="sign_in_wrong">Авторизация не удалась</string>
+    <string name="pls_wait">Пожалуйста, подождите</string>
+    <string name="wrong_try_again">Опаньки не по плану,повторите позже</string>
+    <string name="followers">Подписчики</string>
+    <string name="pls_auth">Пожалуйста сначала войдите</string>
+    <string name="sign_in">Войдите через github</string>
+
+</resources>

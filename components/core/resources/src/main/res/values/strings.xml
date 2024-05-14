@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">RepGit</string>
+    <string name="download_repositories">Downloaded repositories</string>
+    <string name="download_started">Download started</string>
+    <string name="download_ended">Download ended</string>
+    <string name="check_connection">Check your internet connection</string>
+    <string name="result">result</string>
+    <string name="issues">Issues</string>
+    <string name="issues_not_found">Issues not found</string>
+    <string name="sign_in_wrong">Authorization failed</string>
+    <string name="pls_wait">Please wait</string>
+    <string name="wrong_try_again">\"Something went wrong, try again later\"</string>
+    <string name="followers">followers</string>
+    <string name="pls_auth">Please sign in first</string>
+    <string name="sign_in">Login via github</string>
+</resources>
