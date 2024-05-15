@@ -244,12 +244,10 @@ internal fun Screen(
                         content = {
                             item {
                                 Text(
-                                    modifier = Modifier.animateContentSize(),
+                                    modifier = Modifier.animateContentSize().placeholder(!repLog),
                                     text = if (repository?.issuesCount != "0") "${
-                                        stringResource(
-                                            id = AppResources.Values.Strings.ISSUES.id
-                                        )
-                                    } ${repository?.issuesCount} " else "${
+                                        stringResource( id = AppResources.Values.Strings.ISSUES.id)
+                                    } ${ repository?.issuesCount ?: ""} " else "${
                                         stringResource(
                                             id = AppResources.Values.Strings.ISSUES_NOT_FOUND.id
                                         )
