@@ -129,7 +129,11 @@ internal class RepoDetailsScreenDecomposeComponent(
                     }
 
                     is ResultState.Error -> {
-                        onError.invoke(result.error.message)
+                        when (result.statusCode2Int) {
+                            400 -> onError("Something went wrong, try again later")
+                            401 ->  logout()
+                            else -> onError.invoke(result.error.message)
+                        }
                     }
                 }
                 _dataRepositoryReceived.emit(true)
@@ -174,7 +178,11 @@ internal class RepoDetailsScreenDecomposeComponent(
                     }
 
                     is ResultState.Error -> {
-                        onError.invoke(result.error.message)
+                        when (result.statusCode2Int) {
+                            400 -> onError("Something went wrong, try again later")
+                            401 ->  logout()
+                            else -> onError.invoke(result.error.message)
+                        }
                     }
                 }
                 _dataIssuesReceived.emit(true)

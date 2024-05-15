@@ -211,10 +211,11 @@ internal class SearchScreenDecomposeComponent(
                             }
 
                             is ResultState.Error -> {
-                                if (result.statusCode2Int == 400)
-                                    onError.invoke("Something went wrong, try again later")
-                                else
-                                    onError.invoke(result.error.message)
+                                when (result.statusCode2Int) {
+                                    400 -> onError("Something went wrong, try again later")
+                                    401 ->  logout()
+                                    else -> onError.invoke(result.error.message)
+                                }
                             }
                         }
                         _reloadSearch.emit(LoadState.HIDE)
@@ -266,10 +267,11 @@ internal class SearchScreenDecomposeComponent(
                             }
 
                             is ResultState.Error -> {
-                                if (result.statusCode2Int == 400)
-                                    onError.invoke("Something went wrong, try again later")
-                                else
-                                    onError.invoke(result.error.message)
+                                when (result.statusCode2Int) {
+                                    400 -> onError("Something went wrong, try again later")
+                                    401 ->  logout()
+                                    else -> onError.invoke(result.error.message)
+                                }
                             }
                         }
                         _reloadSearch.emit(LoadState.HIDE)
@@ -311,10 +313,11 @@ internal class SearchScreenDecomposeComponent(
                                 }
 
                                 is ResultState.Error -> {
-                                    if (result.statusCode2Int == 400)
-                                        onError.invoke("Something went wrong, try again later")
-                                    else
-                                        onError.invoke(result.error.message)
+                                    when (result.statusCode2Int) {
+                                        400 -> onError("Something went wrong, try again later")
+                                        401 ->  logout()
+                                        else -> onError.invoke(result.error.message)
+                                    }
                                 }
                             }
                             _reloadSearch.emit(LoadState.HIDE)

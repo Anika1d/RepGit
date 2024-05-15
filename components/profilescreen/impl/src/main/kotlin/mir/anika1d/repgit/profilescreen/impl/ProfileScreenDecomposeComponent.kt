@@ -114,10 +114,11 @@ class ProfileScreenDecomposeComponent(
                     }
 
                     is ResultState.Error -> {
-                        if (result.statusCode2Int == 400)
-                            onError.invoke("Something went wrong, try again later")
-                        else
-                            onError.invoke(result.error.message)
+                        when (result.statusCode2Int) {
+                            400 -> onError("Something went wrong, try again later")
+                            401 ->  logout()
+                            else -> onError.invoke(result.error.message)
+                        }
                     }
                 }
             }
@@ -183,10 +184,11 @@ class ProfileScreenDecomposeComponent(
                     }
 
                     is ResultState.Error -> {
-                        if (result.statusCode2Int == 400)
-                            onError.invoke("Something went wrong, try again later")
-                        else
-                            onError.invoke(result.error.message)
+                        when (result.statusCode2Int) {
+                            400 -> onError("Something went wrong, try again later")
+                            401 ->  logout()
+                            else -> onError.invoke(result.error.message)
+                        }
                     }
                 }
             }
